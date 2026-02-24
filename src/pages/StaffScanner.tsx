@@ -45,13 +45,11 @@ const StaffScanner: React.FC = () => {
                 // Track when camera stream starts to avoid "junk screens"
                 scanner.render(
                     (decodedText) => {
-                        if (decodedText.includes('/vip')) {
-                            setScanError('This QR is for joining only. Please scan member card.');
-                            return;
-                        }
+                        // QR MISIDENTIFICATION FIX: Try extracting member ID first
+                        const idMatch = decodedText.match(/\/(card|scan)\/([A-Za-z0-9_-]+)/);
+                        const memberId = idMatch ? idMatch[2] : null;
 
-                        if (decodedText.includes('/scan/')) {
-                            const memberId = decodedText.split('/scan/')[1];
+                        if (memberId) {
                             scanner.clear().then(() => {
                                 scannerRef.current = null;
                                 handleFetchCustomer(memberId);
@@ -59,6 +57,8 @@ const StaffScanner: React.FC = () => {
                                 console.error("Scanner clear failed", err);
                                 handleFetchCustomer(memberId);
                             });
+                        } else if (decodedText.includes('/vip') || decodedText.includes('/join')) {
+                            setScanError('This QR is for joining only. Please scan member card.');
                         } else {
                             setScanError('Invalid QR Code. Please scan a valid Member Card.');
                         }
@@ -92,6 +92,11 @@ const StaffScanner: React.FC = () => {
             setCameraReady(false); // Reset for next scan
         } catch (error) {
             setScanError("Member not found.");
+            // AUTO RESTART SCAN after 2 seconds
+            setTimeout(() => {
+                setScanError('');
+                setCustomer(null);
+            }, 2000);
         } finally {
             setLoading(false);
         }

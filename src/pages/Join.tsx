@@ -50,55 +50,62 @@ const Join: React.FC = () => {
             <div className="glow-bg"></div>
 
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-sm text-center z-10"
+                className="onboarding-container"
             >
-                <div className="mb-12">
+                <div className="text-center mb-12">
                     <p className="member-label">✦ ELITE MEMBERSHIP</p>
-                    <h1 className="customer-name" style={{ fontSize: '36px' }}>JOIN THE CLUB</h1>
+                    <h1 className="onboarding-title">Join the club</h1>
+                    <div className="w-12 h-[1px] bg-white/10 mx-auto"></div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <input
-                        type="text"
-                        placeholder="Full Name"
-                        className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl text-white outline-none focus:border-lavender transition-all"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
-                    />
-                    <input
-                        type="tel"
-                        placeholder="Phone Number"
-                        className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl text-white outline-none focus:border-lavender transition-all"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        required
-                    />
-                    <div className="text-left px-2">
-                        <label className="text-[10px] text-gray-500 uppercase font-bold tracking-widest pl-1 mb-2 block">Your Birthday 🎂</label>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="space-y-4">
                         <input
-                            type="date"
-                            className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl text-white outline-none focus:border-lavender transition-all"
-                            value={formData.dob}
-                            onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                            type="text"
+                            placeholder="Full Name"
+                            className="onboarding-input"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             required
                         />
+                        <input
+                            type="tel"
+                            placeholder="Phone Number"
+                            className="onboarding-input"
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            required
+                        />
+                        <div className="pt-2">
+                            <p className="input-label pl-1">Your Birthday 🎂</p>
+                            <input
+                                type="date"
+                                className="onboarding-input"
+                                value={formData.dob}
+                                onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                                required
+                            />
+                        </div>
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="staff-button primary mt-6"
-                    >
-                        {loading ? 'Verifying...' : 'GET MY VIP CARD'}
-                    </button>
+                    <div className="pt-8">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="staff-button primary"
+                        >
+                            {loading ? 'Verifying...' : 'Create VIP Card'}
+                        </button>
+                    </div>
                 </form>
 
-                <p className="mt-12 text-[10px] text-white/10 uppercase tracking-widest font-bold">
-                    Odancia Elite System &copy; 2026
-                </p>
+                <div className="mt-16 text-center">
+                    <p className="text-[10px] text-white/20 uppercase tracking-[0.5em] font-bold">
+                        Odancia
+                    </p>
+                </div>
             </motion.div>
         </div>
     );

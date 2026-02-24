@@ -13,6 +13,8 @@
   /* Softer border */
   --radius-xl: 44px;
   --radius-lg: 32px;
+  --radius-md: 16px;
+  /* For professional inputs */
 
   /* Spacing Tokens */
   --space-card-top: 32px;
@@ -267,26 +269,86 @@ body {
 }
 
 .staff-button {
-  background: rgba(157, 80, 255, 0.1);
-  border: 1px solid rgba(157, 80, 255, 0.3);
+  background: rgba(157, 80, 255, 0.08);
+  /* Reduced baseline */
+  border: 1px solid rgba(157, 80, 255, 0.2);
   color: white;
-  padding: 24px;
-  border-radius: 28px;
-  font-size: 17px;
-  font-weight: 700;
+  padding: 0 24px;
+  height: 48px;
+  /* Standardized height */
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   width: 100%;
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .staff-button.primary {
-  background: var(--neon-purple);
-  color: black;
+  background: linear-gradient(135deg, var(--neon-purple), #7c3aed);
+  color: #fff;
+  /* Changed from black to white for premium feel */
   border: none;
-  box-shadow: 0 15px 35px rgba(157, 80, 255, 0.4);
+  box-shadow: 0 8px 25px rgba(157, 80, 255, 0.2);
+}
+
+.staff-button:active {
+  scale: 0.98;
+  opacity: 0.9;
+}
+
+/* Onboarding Specific Styles */
+.onboarding-container {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  z-index: 10;
+}
+
+.onboarding-title {
+  font-size: 24px;
+  font-weight: 500;
+  color: white;
+  margin: 8px 0 24px 0;
+  letter-spacing: -0.01em;
+}
+
+.onboarding-input {
+  width: 100%;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(209, 184, 255, 0.15);
+  /* Thin lavender border */
+  border-radius: var(--radius-md);
+  padding: 0 16px;
+  color: white;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.onboarding-input:focus {
+  border-color: var(--lavender);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.onboarding-input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.input-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-bottom: 8px;
 }
 
 .detected-name {
