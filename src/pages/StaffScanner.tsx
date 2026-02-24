@@ -33,62 +33,68 @@ const StaffScanner: React.FC = () => {
         fetchStats();
     }, [business]);
 
-    const startScanner = () => {
-        // Clear any existing scanner instance first
-        if (scannerRef.current) {
-            scannerRef.current.clear().catch(() => { });
-            scannerRef.current = null;
+    const startScanner = (retries = 0) => {
+        if (scannerRef.current) return;
+
+        const readerDiv = document.getElementById('reader');
+        if (!readerDiv) {
+            if (retries < 5) {
+                console.log(`Reader div not found, retrying... (${retries + 1})`);
+                setTimeout(() => startScanner(retries + 1), 250);
+            } else {
+                console.error("Reader div never appeared.");
+            }
+            return;
         }
 
-        setTimeout(() => {
-            const readerDiv = document.getElementById('reader');
-            if (readerDiv && !scannerRef.current) {
-                const scanner = new Html5QrcodeScanner(
-                    "reader",
-                    {
-                        fps: 20,
-                        qrbox: { width: 300, height: 300 },
-                        aspectRatio: 1.0,
-                        // STAFF CAMERA FIX: Use ideal instead of exact for better compatibility
-                        videoConstraints: {
-                            facingMode: { ideal: "environment" }
-                        }
-                    },
-                    false
-                );
-                scannerRef.current = scanner;
-
-                // Track when camera stream starts to avoid "junk screens"
-                scanner.render(
-                    (decodedText) => {
-                        // QR MISIDENTIFICATION FIX: Try extracting member ID first
-                        const idMatch = decodedText.match(/\/(card|scan)\/([A-Za-z0-9_-]+)/);
-                        const memberId = idMatch ? idMatch[2] : null;
-
-                        if (memberId) {
-                            scanner.clear().then(() => {
-                                scannerRef.current = null;
-                                handleFetchCustomer(memberId);
-                            }).catch(err => {
-                                console.error("Scanner clear failed", err);
-                                handleFetchCustomer(memberId);
-                            });
-                        } else if (decodedText.includes('/vip') || decodedText.includes('/join')) {
-                            setScanError('This QR is for joining only. Please scan member card.');
-                        } else {
-                            setScanError('Invalid QR Code. Please scan a valid Member Card.');
-                        }
-                    },
-                    () => {
-                        // Camera started successfully
-                        setCameraReady(true);
+        console.log("Initializing scanner on #reader...");
+        try {
+            const scanner = new Html5QrcodeScanner(
+                "reader",
+                {
+                    fps: 20,
+                    qrbox: { width: 300, height: 300 },
+                    aspectRatio: 1.0,
+                    videoConstraints: {
+                        facingMode: { ideal: "environment" }
                     }
-                );
-            }
-        }, 150);
+                },
+                false
+            );
+            scannerRef.current = scanner;
 
-        // FALLBACK: If camera takes too long, show UI anyway to avoid blank screen
-        setTimeout(() => setCameraReady(true), 3000);
+            scanner.render(
+                (decodedText) => {
+                    console.log("QR Decoded:", decodedText);
+                    const idMatch = decodedText.match(/\/(card|scan)\/([A-Za-z0-9_-]+)/);
+                    const memberId = idMatch ? idMatch[2] : null;
+
+                    if (memberId) {
+                        scanner.clear().then(() => {
+                            scannerRef.current = null;
+                            handleFetchCustomer(memberId);
+                        }).catch(err => {
+                            console.error("Scanner clear failed", err);
+                            handleFetchCustomer(memberId);
+                        });
+                    } else if (decodedText.includes('/vip') || decodedText.includes('/join')) {
+                        setScanError('This QR is for joining only. Please scan member card.');
+                    } else {
+                        setScanError('Invalid QR Code. Please scan a valid Member Card.');
+                    }
+                },
+                (_err) => {
+                    // This is called for every frame where no QR is found.
+                    // We use it as a signal that the camera is actually feeding video.
+                    if (!cameraReady) setCameraReady(true);
+                }
+            );
+        } catch (e) {
+            console.error("Scanner initialization failed", e);
+        }
+
+        // Safety fallback to show UI
+        setTimeout(() => setCameraReady(true), 1500);
     };
 
     useEffect(() => {

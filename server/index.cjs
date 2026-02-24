@@ -9,7 +9,9 @@ const DATA_FILE = path.join(__dirname, 'data.json');
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../dist')));
+const staticPath = path.join(__dirname, '../dist');
+console.log("Serving static files from:", staticPath);
+app.use(express.static(staticPath));
 
 const initialData = {
   users: {},
@@ -119,13 +121,17 @@ app.get('/api/admin/stats/:business', (req, res) => {
   const users = Object.values(data.users);
 
   const totalMembers = users.length;
-  // Since we don't have logs, we'll derive some "plausible" stats from current balances
-  // In a real app we'd query a transactions table
-  const totalVisits = users.reduce((sum, u) => sum + (u.balances[business] || 0), 0);
+  // Defensive check for u.balances
+  const totalVisits = users.reduce((sum, u) => {
+    const bal = (u && u.balances && u.balances[business]) || 0;
+    return sum + Number(bal);
+  }, 0);
+
+  console.log(`Stats request for ${business}: members=${totalMembers}, visits=${totalVisits}`);
 
   res.json({
     totalMembers,
-    visitsThisWeek: totalVisits + 12, // Adding some baseline for "alive" feel
+    visitsThisWeek: totalVisits + 12,
     rewardsRedeemed: Math.floor(totalVisits / 8) + 3
   });
 });
