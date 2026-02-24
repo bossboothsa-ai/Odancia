@@ -1,13 +1,41 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>odancia</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#050408" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Odancia Elite</title>
+
+  <link id="pwa-manifest" rel="manifest" href="/manifest-customer.json" />
+  <script>
+    // DYNAMIC PWA SEPARATION LOGIC
+    const isStaffRoute = window.location.pathname.startsWith('/staff');
+    const manifestEl = document.getElementById('pwa-manifest');
+
+    if (isStaffRoute) {
+      manifestEl.setAttribute('href', '/manifest-staff.json');
+      document.title = "Odancia Scanner";
+    } else {
+      manifestEl.setAttribute('href', '/manifest-customer.json');
+      document.title = "Odancia VIP";
+    }
+
+    // REGISTER SERVICE WORKER
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js');
+      });
+    }
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>
