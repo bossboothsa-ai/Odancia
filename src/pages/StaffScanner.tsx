@@ -11,11 +11,27 @@ const StaffScanner: React.FC = () => {
     const [actionFeedback, setActionFeedback] = useState('');
     const [scanError, setScanError] = useState('');
     const [cameraReady, setCameraReady] = useState(false);
+    const [staffView, setStaffView] = useState<'home' | 'scan'>('home');
+    const [stats, setStats] = useState({ totalMembers: 0, visitsThisWeek: 0, rewardsRedeemed: 0 });
+    const [activeAction, setActiveAction] = useState<'add' | 'redeem' | null>(null);
     const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
     const API_BASE = import.meta.env.DEV
         ? `http://${window.location.hostname}:3002`
         : window.location.origin;
+
+    const fetchStats = async () => {
+        try {
+            const res = await axios.get(`${API_BASE}/api/admin/stats/${business}`);
+            setStats(res.data);
+        } catch (e) {
+            console.error("Stats fetch failed", e);
+        }
+    };
+
+    useEffect(() => {
+        fetchStats();
+    }, [business]);
 
     const startScanner = () => {
         // Clear any existing scanner instance first
@@ -76,7 +92,7 @@ const StaffScanner: React.FC = () => {
     };
 
     useEffect(() => {
-        if (!customer && !actionFeedback && !scanError) {
+        if (staffView === 'scan' && !customer && !actionFeedback && !scanError) {
             startScanner();
         }
         return () => {
@@ -85,7 +101,7 @@ const StaffScanner: React.FC = () => {
                 scannerRef.current = null;
             }
         };
-    }, [customer, actionFeedback, scanError]);
+    }, [staffView, customer, actionFeedback, scanError]);
 
     const handleFetchCustomer = async (id: string) => {
         setLoading(true);
@@ -137,6 +153,8 @@ const StaffScanner: React.FC = () => {
                 setCustomer(null);
                 setScanError('');
                 setCameraReady(false);
+                setStaffView('home');
+                fetchStats();
             }, 1500);
 
         } catch (error) {
@@ -153,7 +171,56 @@ const StaffScanner: React.FC = () => {
             <div className="glow-bg"></div>
 
             <AnimatePresence mode="wait">
-                {(!customer && !actionFeedback && !scanError) ? (
+                {staffView === 'home' ? (
+                    <motion.div
+                        key="home"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="w-full max-w-sm"
+                    >
+                        <div className="text-center mb-12">
+                            <p className="member-label">✦ {business?.toUpperCase()} STATION</p>
+                            <h1 className="customer-name" style={{ fontSize: '32px' }}>Activity Hub</h1>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 mb-12">
+                            <div className="bg-white/5 border border-white/5 p-6 rounded-[32px] backdrop-blur-xl">
+                                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black mb-1">Total Members</p>
+                                <p className="text-3xl font-black text-white">{stats.totalMembers}</p>
+                            </div>
+                            <div className="flex gap-4">
+                                <div className="flex-1 bg-white/5 border border-white/5 p-6 rounded-[32px] backdrop-blur-xl">
+                                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black mb-1">Visits Week</p>
+                                    <p className="text-2xl font-black text-[#d1b8ff]">{stats.visitsThisWeek}</p>
+                                </div>
+                                <div className="flex-1 bg-white/5 border border-white/5 p-6 rounded-[32px] backdrop-blur-xl">
+                                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black mb-1">Rewards</p>
+                                    <p className="text-2xl font-black text-[#9d50ff]">{stats.rewardsRedeemed}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <button
+                                onClick={() => { setStaffView('scan'); setActiveAction('add'); }}
+                                className="staff-button primary"
+                            >
+                                Add Visit
+                            </button>
+                            <button
+                                onClick={() => { setStaffView('scan'); setActiveAction('redeem'); }}
+                                className="staff-button"
+                            >
+                                Redeem Reward
+                            </button>
+                        </div>
+
+                        <p className="mt-16 text-center text-[10px] text-white/10 uppercase tracking-widest font-bold">
+                            Odancia Private Reserve
+                        </p>
+                    </motion.div>
+                ) : (staffView === 'scan' && !customer && !actionFeedback && !scanError) ? (
                     <motion.div
                         key="scanner"
                         initial={{ opacity: 0 }}
@@ -161,16 +228,12 @@ const StaffScanner: React.FC = () => {
                         exit={{ opacity: 0 }}
                         className="scan-view-container w-full flex-1 flex flex-col justify-center"
                     >
-                        <p className="staff-header-label">✦ MEMBER SCAN</p>
+                        <p className="staff-header-label">✦ SCANNING: {activeAction === 'add' ? 'VISIT' : 'REWARD'}</p>
                         <div className="scanner-frame-wrapper">
                             <div className="scan-line"></div>
                             <div id="reader" className="overflow-hidden"></div>
                         </div>
-                        <p className="scan-bottom-text">Scanning for VIP Member…</p>
-
-                        <div className="mt-8 opacity-20">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.3em]">{business} STATION</p>
-                        </div>
+                        <button onClick={() => setStaffView('home')} className="mt-8 text-white/30 text-xs font-bold uppercase tracking-widest">Cancel Scan</button>
                     </motion.div>
                 ) : scanError ? (
                     <motion.div
@@ -215,7 +278,7 @@ const StaffScanner: React.FC = () => {
                         exit={{ opacity: 0, scale: 0.95 }}
                         className="member-detected-card"
                     >
-                        <p className="staff-header-label">✦ MEMBER SCAN</p>
+                        <p className="staff-header-label">✦ MEMBER DETECTED</p>
 
                         <div className="mb-12">
                             <h1 className="detected-name">{customer.name}</h1>
@@ -234,17 +297,17 @@ const StaffScanner: React.FC = () => {
                         <div className="space-y-6 w-full max-w-[320px] mx-auto">
                             <button
                                 disabled={loading}
-                                onClick={() => handleUpdate('add')}
+                                onClick={() => handleUpdate(activeAction || 'add')}
                                 className="staff-button primary"
                             >
-                                + Add Visit
+                                {activeAction === 'add' ? 'Confirm Visit' : 'Confirm Reward'}
                             </button>
                             <button
                                 disabled={loading}
-                                onClick={() => handleUpdate('redeem')}
+                                onClick={() => { setCustomer(null); setStaffView('home'); }}
                                 className="staff-button"
                             >
-                                Redeem Reward
+                                Cancel
                             </button>
                         </div>
                     </motion.div>
