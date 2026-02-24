@@ -89,11 +89,11 @@ const VIPCard: React.FC = () => {
                 )}
             </AnimatePresence>
 
-            <div className="vip-pass-root flex-1 flex flex-col justify-center">
-
+            <div className="vip-pass-root">
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
+                    className="vip-card-header"
                 >
                     <p className="member-label">✦ MEMBER ACCESS</p>
                     <h1 className="customer-name">{user.name}</h1>
@@ -120,7 +120,7 @@ const VIPCard: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                 >
-                    <div className="status-divider">
+                    <div className="status-divider" style={{ marginTop: '32px', marginBottom: '16px' }}>
                         <div className="line"></div>
                         <span className="text">CURRENT STATUS</span>
                         <div className="line"></div>
@@ -128,22 +128,22 @@ const VIPCard: React.FC = () => {
 
                     <div className="status-list">
                         <div className="status-row">
-                            <span>☕ Coffee Access</span>
-                            <span>{user.balances.coffee} / 8</span>
+                            <span className="label">☕ Coffee Access</span>
+                            <span className="value">{user.balances.coffee} / 8 visits</span>
                         </div>
                         <div className="status-row">
-                            <span>🧺 Laundry Credit</span>
-                            <span>R{user.balances.laundry}</span>
+                            <span className="label">🧺 Laundry Credit</span>
+                            <span className="value">R{user.balances.laundry}</span>
                         </div>
                         <div className="status-row">
-                            <span>✂ VIP Salon</span>
-                            <span>{user.balances.salon} / 5</span>
+                            <span className="label">✂ VIP Salon</span>
+                            <span className="value">{user.balances.salon} / 5 visits</span>
                         </div>
                     </div>
                 </motion.div>
 
-                <div className="mt-12 text-center text-[10px] text-white/5 font-bold tracking-[0.4em] uppercase">
-                    Odancia Elite Membership
+                <div className="footer-refinement">
+                    <p>Odancia Elite System</p>
                 </div>
 
             </div>

@@ -1,12 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const StaffScanner: React.FC = () => {
     const { business } = useParams<{ business: string }>();
-    const navigate = useNavigate();
     const [customer, setCustomer] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [actionFeedback, setActionFeedback] = useState('');
@@ -34,9 +33,9 @@ const StaffScanner: React.FC = () => {
                         fps: 20,
                         qrbox: { width: 300, height: 300 },
                         aspectRatio: 1.0,
-                        // STAFF CAMERA FIX: Force rear camera
+                        // STAFF CAMERA FIX: Force rear camera (exact)
                         videoConstraints: {
-                            facingMode: { ideal: "environment" }
+                            facingMode: { exact: "environment" }
                         }
                     },
                     false
@@ -120,22 +119,26 @@ const StaffScanner: React.FC = () => {
             });
 
             // PREVENT BLANK SCREEN: Update state directly without refresh
-            setCustomer(response.data);
+            const updatedCustomer = response.data;
+            setCustomer(updatedCustomer);
             setActionFeedback(type === 'add' ? 'Visit Added ✅' : 'Reward Redeemed 🎉');
 
-            // AUTO RETURN TO SCAN after 2 seconds
+            // AUTO RETURN TO SCAN after 1.5 seconds (User requested)
             setTimeout(() => {
                 setActionFeedback('');
                 setCustomer(null);
                 setScanError('');
                 setCameraReady(false);
-            }, 2000);
+            }, 1500);
 
         } catch (error) {
             alert("System Error. Try Again.");
             setLoading(false);
         }
     };
+
+    const currentBalance = customer?.balances[business || ''] || 0;
+    const target = business === 'salon' ? 5 : 8;
 
     return (
         <div className="min-h-screen w-full bg-[#050408] relative overflow-hidden flex flex-col items-center justify-center p-6">
@@ -148,7 +151,7 @@ const StaffScanner: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: cameraReady ? 1 : 0 }} // Hide UI until camera is ready
                         exit={{ opacity: 0 }}
-                        className="scan-view-container w-full"
+                        className="scan-view-container w-full flex-1 flex flex-col justify-center"
                     >
                         <p className="staff-header-label">✦ MEMBER SCAN</p>
                         <div className="scanner-frame-wrapper">
@@ -156,6 +159,10 @@ const StaffScanner: React.FC = () => {
                             <div id="reader" className="overflow-hidden"></div>
                         </div>
                         <p className="scan-bottom-text">Scanning for VIP Member…</p>
+
+                        <div className="mt-8 opacity-20">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.3em]">{business} STATION</p>
+                        </div>
                     </motion.div>
                 ) : scanError ? (
                     <motion.div
