@@ -112,9 +112,10 @@ app.post('/api/admin/holiday-reward', (req, res) => {
   res.json({ message: `Holiday reward applied to all members!` });
 });
 
-app.use((req, res) => {
+app.get('*', (req, res) => {
   const indexPath = path.join(__dirname, '../dist/index.html');
   if (fs.existsSync(indexPath)) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.sendFile(indexPath);
   } else {
     res.status(404).send("Frontend build not found.");
