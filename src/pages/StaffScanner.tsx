@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle, Plus, Gift, Coffee, Shirt, Scissors, Smartphone } from 'lucide-react';
+import { X, CheckCircle } from 'lucide-react';
 
 const StaffScanner: React.FC = () => {
     const { business } = useParams<{ business: string }>();

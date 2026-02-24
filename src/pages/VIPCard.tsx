@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gift, Coffee, Scissors, Shirt, Sparkles } from 'lucide-react';
+import { Coffee, Scissors, Shirt, Sparkles } from 'lucide-react';
 
 const VIPCard: React.FC = () => {
     const { id } = useParams<{ id: string }>();
