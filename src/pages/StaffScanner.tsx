@@ -75,7 +75,6 @@ const StaffScanner: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-[#050505] p-6 flex flex-col items-center">
-            {/* Same UI structure as before... */}
             <div className="w-full max-w-md">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-white font-bold">Scanning...</h2>
@@ -83,29 +82,89 @@ const StaffScanner: React.FC = () => {
                         <X size={20} className="text-white" />
                     </button>
                 </div>
-                {!customer && <div className="rounded-3xl overflow-hidden glass border-white/10"><div id="reader"></div></div>}
 
-                {/* Simplified conditional content for space */}
-                {customer && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4">
-                        <div className="premium-card">
-                            <h3 className="text-xl font-bold text-white mb-4">{customer.name}</h3>
-                            <div className="bg-black/40 p-6 rounded-2xl mb-6">
-                                <p className="text-4xl font-black text-white">
-                                    {business === 'laundry' ? `R${currentBalance}` : `${currentBalance} / ${target}`}
-                                </p>
-                            </div>
-                            <div className="grid grid-cols-1 gap-4">
-                                <button disabled={loading} onClick={() => handleUpdate('add')} className="btn-primary">Add Points</button>
-                                <button disabled={loading || !isEligible} onClick={() => handleUpdate('redeem')} className="btn-primary bg-white text-black">Redeem</button>
-                            </div>
-                        </div>
-                        <button onClick={() => setCustomer(null)} className="w-full py-4 mt-4 glass text-[#a0a0a0]">Scan Another</button>
-                    </motion.div>
+                {!customer && (
+                    <div className="rounded-3xl overflow-hidden glass border-white/10">
+                        <div id="reader"></div>
+                    </div>
                 )}
-            </div>
 
-            {successMsg && <div className="fixed bottom-10 bg-green-500 text-white px-8 py-4 rounded-full">{successMsg}</div>}
+                <AnimatePresence>
+                    {customer && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="mt-4"
+                        >
+                            <div className="premium-card mb-6">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-16 h-16 bg-[#d4af37] rounded-2xl flex items-center justify-center font-black text-2xl text-black">
+                                        {customer.name[0]}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white">{customer.name}</h3>
+                                        <p className="text-[#a0a0a0] text-sm">VIP Member</p>
+                                    </div>
+                                </div>
+
+                                <div className="bg-black/40 p-6 rounded-2xl mb-6">
+                                    <p className="text-xs text-[#444] uppercase tracking-widest mb-1">Status</p>
+                                    <div className="flex items-end gap-2">
+                                        <span className="text-4xl font-black text-white">
+                                            {business === 'laundry' ? `R${currentBalance}` : `${currentBalance} / ${target}`}
+                                        </span>
+                                        <span className="text-[#d4af37] mb-2">
+                                            {business === 'coffee' ? <Coffee size={24} /> : business === 'salon' ? <Scissors size={24} /> : <Shirt size={24} />}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-4">
+                                    <button
+                                        disabled={loading}
+                                        onClick={() => handleUpdate('add')}
+                                        className="btn-primary flex items-center justify-center gap-2"
+                                    >
+                                        <Plus size={20} />
+                                        <span>Add {business === 'laundry' ? 'Credit' : 'Visit'}</span>
+                                    </button>
+
+                                    <button
+                                        disabled={loading || !isEligible}
+                                        onClick={() => handleUpdate('redeem')}
+                                        className={`p-6 rounded-2xl font-black uppercase text-sm tracking-widest flex items-center justify-center gap-2 ${isEligible ? 'bg-white text-black' : 'bg-white/5 text-white/20'
+                                            }`}
+                                    >
+                                        <Gift size={20} />
+                                        <span>Redeem Reward</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setCustomer(null)}
+                                className="w-full py-4 glass text-[#a0a0a0] font-bold rounded-2xl"
+                            >
+                                Scan Another Member
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                    {successMsg && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 50 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.5 }}
+                            className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-[#4caf50] text-white px-8 py-4 rounded-full shadow-2xl flex items-center gap-3 z-50"
+                        >
+                            <CheckCircle size={24} />
+                            <span className="font-bold uppercase tracking-widest">{successMsg}</span>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
         </div>
     );
 };

@@ -72,6 +72,8 @@ const VIPCard: React.FC = () => {
 
                 <div className="w-full space-y-4 mb-10">
                     <h3 className="text-xs text-[#444] uppercase tracking-widest mb-4">Current Rewards</h3>
+
+                    {/* Coffee Shop */}
                     <div className="glass p-5 rounded-2xl flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center text-[#d4af37]">
@@ -86,9 +88,62 @@ const VIPCard: React.FC = () => {
                             <div className="h-full bg-[#d4af37]" style={{ width: `${Math.min((user.balances.coffee / 8) * 100, 100)}%` }}></div>
                         </div>
                     </div>
-                    {/* ... other balances (omitted for brevity but structure remains same) ... */}
+
+                    {/* Laundry */}
+                    <div className="glass p-5 rounded-2xl flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center text-blue-400">
+                                <Shirt size={20} />
+                            </div>
+                            <div>
+                                <p className="font-semibold">Laundry Credit</p>
+                                <p className="text-sm text-[#a0a0a0]">R{user.balances.laundry} Available</p>
+                            </div>
+                        </div>
+                        <div className="text-lg font-bold text-blue-400">R{user.balances.laundry}</div>
+                    </div>
+
+                    {/* Salon */}
+                    <div className="glass p-5 rounded-2xl flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center text-purple-400">
+                                <Scissors size={20} />
+                            </div>
+                            <div>
+                                <p className="font-semibold">VIP Salon</p>
+                                <p className="text-sm text-[#a0a0a0]">{user.balances.salon} / 5 visits</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-1">
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <div key={i} className={`w-3 h-3 rounded-full ${i <= user.balances.salon ? 'bg-purple-400' : 'bg-[#222]'}`}></div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
-                {/* ... existing action buttons ... */}
+
+                <div className="grid grid-cols-2 gap-4">
+                    <button
+                        onClick={handleAddToHome}
+                        className="glass flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-medium"
+                    >
+                        <Smartphone size={18} />
+                        Add to Home
+                    </button>
+                    <button
+                        className="glass flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-medium"
+                        onClick={() => {
+                            if (navigator.share) {
+                                navigator.share({ title: 'My VIP Card', url: window.location.href });
+                            } else {
+                                alert('Copy this URL to save your card: ' + window.location.href);
+                            }
+                        }}
+                    >
+                        <Share size={18} />
+                        Share Card
+                    </button>
+                </div>
             </motion.div>
         </div>
     );
