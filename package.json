@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "start": "node server/index.cjs",
     "server": "nodemon server/index.cjs",
     "dev:all": "concurrently \"npm run server\" \"npm run dev -- --host\"",
     "build": "vite build",

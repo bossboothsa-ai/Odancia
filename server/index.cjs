@@ -5,7 +5,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
-const DATA_FILE = process.env.RENDER ? '/opt/render/project/src/server/data.json' : path.join(__dirname, 'data.json');
+const DATA_FILE = path.join(__dirname, 'data.json');
 
 app.use(cors());
 app.use(express.json());
@@ -112,7 +112,7 @@ app.post('/api/admin/holiday-reward', (req, res) => {
   res.json({ message: `Holiday reward applied to all members!` });
 });
 
-app.get('*', (req, res) => {
+app.get(/.*/, (req, res) => {
   const indexPath = path.join(__dirname, '../dist/index.html');
   if (fs.existsSync(indexPath)) {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
