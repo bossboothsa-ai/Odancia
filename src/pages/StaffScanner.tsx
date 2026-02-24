@@ -33,9 +33,9 @@ const StaffScanner: React.FC = () => {
                         fps: 20,
                         qrbox: { width: 300, height: 300 },
                         aspectRatio: 1.0,
-                        // STAFF CAMERA FIX: Force rear camera (exact)
+                        // STAFF CAMERA FIX: Use ideal instead of exact for better compatibility
                         videoConstraints: {
-                            facingMode: { exact: "environment" }
+                            facingMode: { ideal: "environment" }
                         }
                     },
                     false
@@ -70,6 +70,9 @@ const StaffScanner: React.FC = () => {
                 );
             }
         }, 150);
+
+        // FALLBACK: If camera takes too long, show UI anyway to avoid blank screen
+        setTimeout(() => setCameraReady(true), 3000);
     };
 
     useEffect(() => {
@@ -154,7 +157,7 @@ const StaffScanner: React.FC = () => {
                     <motion.div
                         key="scanner"
                         initial={{ opacity: 0 }}
-                        animate={{ opacity: cameraReady ? 1 : 0 }} // Hide UI until camera is ready
+                        animate={{ opacity: cameraReady ? 1 : 0.01 }} // Use 0.01 instead of 0 to avoid "unmounted" feel
                         exit={{ opacity: 0 }}
                         className="scan-view-container w-full flex-1 flex flex-col justify-center"
                     >
