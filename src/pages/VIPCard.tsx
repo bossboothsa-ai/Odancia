@@ -35,9 +35,9 @@ const VIPCard: React.FC = () => {
     if (!user) return <div className="min-h-screen flex items-center justify-center">Member not found.</div>;
 
     const rewards = [
-        { key: 'coffee', name: 'Coffee Shop', icon: <Coffee />, target: 8, color: '#d4af37' },
-        { key: 'laundry', name: 'Laundry Credit', icon: <Shirt />, target: 100, isCash: true, color: '#60a5fa' },
-        { key: 'salon', name: 'VIP Salon', icon: <Scissors />, target: 5, color: '#c084fc' },
+        { key: 'coffee', name: 'Coffee Shop', icon: <Coffee size={14} />, target: 8, color: '#d4af37' },
+        { key: 'laundry', name: 'Laundry Credit', icon: <Shirt size={14} />, target: 100, isCash: true, color: '#60a5fa' },
+        { key: 'salon', name: 'VIP Salon', icon: <Scissors size={14} />, target: 5, color: '#c084fc' },
     ];
 
     return (
@@ -47,7 +47,6 @@ const VIPCard: React.FC = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 className="w-full max-w-sm"
             >
-                {/* Apple Wallet Style Card */}
                 <div className="vip-card-container mb-8">
                     <div className="flex justify-between items-start mb-6">
                         <div>
@@ -75,7 +74,7 @@ const VIPCard: React.FC = () => {
                                 <div key={reward.key} className="space-y-2">
                                     <div className="flex justify-between items-end text-xs font-bold uppercase tracking-widest">
                                         <span className="flex items-center gap-2 opacity-50">
-                                            {React.cloneElement(reward.icon as React.ReactElement, { size: 14 })}
+                                            {reward.icon}
                                             {reward.name}
                                         </span>
                                         <span style={{ color: reward.color }}>
@@ -97,7 +96,6 @@ const VIPCard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Birthday / Special Alert */}
                 <AnimatePresence>
                     {user.isBirthday && (
                         <motion.div

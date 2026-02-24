@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Coffee, Shirt, Scissors, ShieldCheck } from 'lucide-react';
+import { Coffee, Shirt, Scissors } from 'lucide-react';
 
 const StaffLogin: React.FC = () => {
     const navigate = useNavigate();
