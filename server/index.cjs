@@ -5,7 +5,8 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
-const DATA_FILE = path.join(__dirname, 'data.json');
+// Use /tmp on Render for ephemeral data, or local for development
+const DATA_FILE = process.env.RENDER ? '/opt/render/project/src/server/data.json' : path.join(__dirname, 'data.json');
 
 app.use(cors());
 app.use(express.json());
@@ -15,8 +16,8 @@ app.use(express.static(path.join(__dirname, '../dist')));
 
 // Initial data structure
 const initialData = {
-  users: {}, // phone -> { name, id, balances: { coffee: 0, laundry: 0, salon: 0 } }
-  qrMap: {}  // id -> phone
+  users: {},
+  qrMap: {}
 };
 
 // Load data
@@ -33,7 +34,11 @@ function loadData() {
 
 // Save data
 function saveData(data) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+  } catch (e) {
+    console.error("Failed to save data:", e);
+  }
 }
 
 // API Routes
@@ -89,7 +94,12 @@ app.post('/api/update-points', (req, res) => {
 
 // Fallback to index.html for React Router
 app.use((req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
+  const indexPath = path.join(__dirname, '../dist/index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send("Frontend build not found. Please run 'npm run build'.");
+  }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
