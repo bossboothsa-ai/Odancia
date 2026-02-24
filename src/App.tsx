@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Join from './pages/Join';
 import VIPCard from './pages/VIPCard';
 import StaffLogin from './pages/StaffLogin';
-import StaffDashboard from './pages/StaffDashboard';
 import StaffScanner from './pages/StaffScanner';
 
 function App() {
@@ -14,8 +13,7 @@ function App() {
           <Route path="/join" element={<Join />} />
           <Route path="/card/:id" element={<VIPCard />} />
           <Route path="/staff" element={<StaffLogin />} />
-          <Route path="/staff/dashboard/:business" element={<StaffDashboard />} />
-          <Route path="/staff/scan/:business" element={<StaffScanner />} />
+          <Route path="/staff/:business" element={<StaffScanner />} />
         </Routes>
       </div>
     </Router>

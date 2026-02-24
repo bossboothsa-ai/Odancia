@@ -16,22 +16,31 @@ const StaffScanner: React.FC = () => {
         : window.location.origin;
 
     const startScanner = () => {
-        if (!scannerRef.current) {
-            const scanner = new Html5QrcodeScanner(
-                "reader",
-                { fps: 20, qrbox: { width: 300, height: 300 } },
-                false
-            );
-            scannerRef.current = scanner;
-            scanner.render(
-                (decodedText) => {
-                    scanner.clear();
-                    scannerRef.current = null;
-                    handleFetchCustomer(decodedText);
-                },
-                () => { }
-            );
-        }
+        // Use a timeout to ensure DOM is ready for 'reader'
+        setTimeout(() => {
+            const readerDiv = document.getElementById('reader');
+            if (readerDiv && !scannerRef.current) {
+                const scanner = new Html5QrcodeScanner(
+                    "reader",
+                    {
+                        fps: 20,
+                        qrbox: { width: 300, height: 300 },
+                        aspectRatio: 1.0,
+                        showTorchButtonIfSupported: true
+                    },
+                    /* verbose= */ false
+                );
+                scannerRef.current = scanner;
+                scanner.render(
+                    (decodedText) => {
+                        scanner.clear();
+                        scannerRef.current = null;
+                        handleFetchCustomer(decodedText);
+                    },
+                    () => { }
+                );
+            }
+        }, 100);
     };
 
     useEffect(() => {
@@ -40,7 +49,7 @@ const StaffScanner: React.FC = () => {
         }
         return () => {
             if (scannerRef.current) {
-                scannerRef.current.clear().catch(e => console.error(e));
+                scannerRef.current.clear().catch(e => console.error("Scanner clear error", e));
                 scannerRef.current = null;
             }
         };
@@ -52,9 +61,9 @@ const StaffScanner: React.FC = () => {
             const response = await axios.get(`${API_BASE}/api/users/${id}`);
             setCustomer(response.data);
         } catch (error) {
-            alert("Member not found.");
-            // Return to scan mode automatically on error
+            alert("No Member Detected.");
             setCustomer(null);
+            setActionFeedback('');
         } finally {
             setLoading(false);
         }
@@ -67,7 +76,7 @@ const StaffScanner: React.FC = () => {
         const target = business === 'salon' ? 5 : 8;
 
         if (type === 'redeem' && currentBalance < target && business !== 'laundry') {
-            alert("Not enough visits to redeem.");
+            alert("Reward requirement not reached.");
             return;
         }
 
@@ -81,18 +90,17 @@ const StaffScanner: React.FC = () => {
                 type
             });
 
-            // Update UI instantly
             setCustomer(response.data);
-            setActionFeedback(type === 'add' ? 'Visit Added ✅' : 'Reward Redeemed ✅');
+            setActionFeedback(type === 'add' ? 'Visit Added ✅' : 'Reward Redeemed 🎉');
 
-            // Wait 2 seconds then auto-return to scan
+            // Auto return to scan after 2 seconds
             setTimeout(() => {
                 setActionFeedback('');
                 setCustomer(null);
             }, 2000);
 
         } catch (error) {
-            alert("Update Failed");
+            alert("System Error. Try Again.");
         } finally {
             setLoading(false);
         }
@@ -107,37 +115,33 @@ const StaffScanner: React.FC = () => {
 
             <AnimatePresence mode="wait">
                 {(!customer && !actionFeedback) ? (
-                    /* SCAN MODE (AUTOMATIC) */
                     <motion.div
                         key="scanner"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="scan-view-container"
+                        className="scan-view-container w-full"
                     >
                         <p className="staff-header-label">✦ MEMBER SCAN</p>
                         <div className="scanner-frame-wrapper">
                             <div className="scan-line"></div>
-                            <div id="reader"></div>
+                            <div id="reader" className="overflow-hidden"></div>
                         </div>
-                        <p className="scan-bottom-text">Scanning for VIP Member...</p>
+                        <p className="scan-bottom-text">Scanning for VIP Member…</p>
                     </motion.div>
                 ) : actionFeedback ? (
-                    /* FEEDBACK STATE */
                     <motion.div
                         key="feedback"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         className="text-center"
                     >
-                        <div className="w-32 h-32 bg-white/5 border border-[#9d50ff] rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_50px_rgba(157,80,255,0.3)]">
-                            <span className="text-4xl">✨</span>
+                        <div className="w-40 h-40 bg-white/5 border border-[#9d50ff] rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_50px_rgba(157,80,255,0.4)]">
+                            <span className="text-6xl">✨</span>
                         </div>
-                        <h1 className="text-3xl font-black uppercase tracking-tight">{actionFeedback}</h1>
-                        <p className="text-gray-500 mt-4 font-bold uppercase tracking-widest text-[10px]">Returning to scan mode...</p>
+                        <h1 className="text-4xl font-black uppercase tracking-tight">{actionFeedback}</h1>
                     </motion.div>
                 ) : (
-                    /* MEMBER SCREEN (POST-SCAN) */
                     <motion.div
                         key="detected"
                         initial={{ opacity: 0, y: 30 }}
@@ -145,23 +149,23 @@ const StaffScanner: React.FC = () => {
                         exit={{ opacity: 0, scale: 0.95 }}
                         className="member-detected-card"
                     >
-                        <p className="staff-header-label">✦ MEMBER SCAN SUCCESS</p>
+                        <p className="staff-header-label">✦ MEMBER SCAN</p>
 
-                        <div>
+                        <div className="mb-12">
                             <h1 className="detected-name">{customer.name}</h1>
                             <p className="detected-vip-tag">✦ VIP MEMBER</p>
                         </div>
 
-                        <div className="detected-divider"></div>
+                        <div className="detected-divider mb-8"></div>
 
-                        <p className="detected-status-text">
+                        <p className="detected-status-text mb-12">
                             {business === 'laundry'
                                 ? `Laundry Credit: R${currentBalance}`
-                                : `${business === 'coffee' ? 'Coffee' : 'Salon'} Progress: ${currentBalance} / ${target} visits`
+                                : `${business === 'coffee' ? 'Coffee' : 'Salon'} Progress: ${currentBalance} / ${target}`
                             }
                         </p>
 
-                        <div className="space-y-4 w-full px-4">
+                        <div className="space-y-6 w-full max-w-[320px] mx-auto">
                             <button
                                 disabled={loading}
                                 onClick={() => handleUpdate('add')}
@@ -176,20 +180,33 @@ const StaffScanner: React.FC = () => {
                             >
                                 Redeem Reward
                             </button>
-
-                            <button
-                                onClick={() => {
-                                    setCustomer(null);
-                                    setActionFeedback('');
-                                }}
-                                className="w-full pt-8 text-[10px] font-bold uppercase tracking-[0.4em] text-white/10"
-                            >
-                                Cancel & Back to Scan
-                            </button>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <style>{`
+                /* Hide technical library UI */
+                #reader__dashboard, 
+                #reader__camera_selection, 
+                #reader__status_span,
+                #reader button,
+                #reader img,
+                #reader__scan_region img,
+                .html5-qrcode-element {
+                    display: none !important;
+                }
+                #reader__scan_region {
+                    border: none !important;
+                }
+                #reader {
+                    border: none !important;
+                }
+                #reader video {
+                    border-radius: 40px !important;
+                    object-fit: cover !important;
+                }
+            `}</style>
         </div>
     );
 };

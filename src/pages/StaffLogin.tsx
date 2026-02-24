@@ -22,7 +22,7 @@ const StaffLogin: React.FC = () => {
                 className="w-full max-w-sm"
             >
                 <div className="text-center mb-16">
-                    <p className="member-label">✦ AUTHENTICATION REQUIRED</p>
+                    <p className="member-label">✦ SELECT BUSINESS</p>
                     <h1 className="customer-name" style={{ fontSize: '32px' }}>STAFF ENTRANCE</h1>
                 </div>
 
@@ -30,7 +30,7 @@ const StaffLogin: React.FC = () => {
                     {businesses.map((biz) => (
                         <button
                             key={biz.id}
-                            onClick={() => navigate(`/staff/dashboard/${biz.id}`)}
+                            onClick={() => navigate(`/staff/${biz.id}`)}
                             className="w-full bg-white/5 border border-white/5 p-8 rounded-[32px] flex items-center gap-6 group active:scale-95 transition-all backdrop-blur-xl"
                         >
                             <div
@@ -41,14 +41,14 @@ const StaffLogin: React.FC = () => {
                             </div>
                             <div className="flex-1 text-left">
                                 <h3 className="text-xl font-extrabold tracking-tight text-white">{biz.name}</h3>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Authorized Scan Mode</p>
+                                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Open Scanner</p>
                             </div>
                         </button>
                     ))}
                 </div>
 
-                <p className="mt-20 text-center text-[10px] text-white/20 font-black uppercase tracking-widest">
-                    Odancia Private Reserve • Admin System
+                <p className="mt-20 text-center text-[10px] text-white/10 font-black uppercase tracking-widest">
+                    Odancia Private Reserve
                 </p>
             </motion.div>
         </div>
