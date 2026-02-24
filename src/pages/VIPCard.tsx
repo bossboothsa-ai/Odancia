@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import axios from 'axios';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Coffee, Scissors, Shirt, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const VIPCard: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -31,88 +30,87 @@ const VIPCard: React.FC = () => {
         return () => clearInterval(interval);
     }, [id]);
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center font-bold tracking-widest text-xs uppercase text-gray-500">Retrieving Status...</div>;
-    if (!user) return <div className="min-h-screen flex items-center justify-center">Member not found.</div>;
+    if (loading) return (
+        <div className="min-h-screen bg-[#07060a] flex items-center justify-center">
+            <p className="text-[10px] font-bold tracking-[0.4em] text-gray-600 uppercase">Verifying Access...</p>
+        </div>
+    );
 
-    const rewards = [
-        { key: 'coffee', name: 'Coffee Shop', icon: <Coffee size={14} />, target: 8, color: '#d4af37' },
-        { key: 'laundry', name: 'Laundry Credit', icon: <Shirt size={14} />, target: 100, isCash: true, color: '#60a5fa' },
-        { key: 'salon', name: 'VIP Salon', icon: <Scissors size={14} />, target: 5, color: '#c084fc' },
-    ];
+    if (!user) return (
+        <div className="min-h-screen bg-[#07060a] flex items-center justify-center">
+            <p className="text-white opacity-50">Invalid Access Pass</p>
+        </div>
+    );
 
     return (
-        <div className="min-h-screen flex flex-col items-center p-6 bg-black overflow-y-auto pb-12">
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-full max-w-sm"
-            >
-                <div className="vip-card-container mb-8">
-                    <div className="flex justify-between items-start mb-6">
-                        <div>
-                            <p className="text-[10px] items-center flex gap-1 font-extrabold uppercase tracking-[0.3em] text-[#d4af37] mb-1">
-                                VIP MEMBER <Sparkles size={10} />
-                            </p>
-                            <h1 className="text-3xl font-extrabold tracking-tight truncate">{user.name}</h1>
+        <div className="min-h-screen w-full relative overflow-hidden flex flex-col items-center">
+            {/* Background Effects */}
+            <div className="glow-bg"></div>
+
+            <div className="vip-pass-root flex-1 flex flex-col justify-center">
+
+                {/* 1. TOP SECTION */}
+                <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                >
+                    <p className="member-label">✦ MEMBER ACCESS</p>
+                    <h1 className="customer-name">{user.name}</h1>
+                </motion.div>
+
+                {/* 2. CENTER SECTION (QR Domination) */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="qr-glass-card animate-float"
+                >
+                    <div className="qr-glow-inner"></div>
+                    <div className="qr-content">
+                        <QRCodeSVG
+                            value={user.id}
+                            size={200}
+                            level="H"
+                            includeMargin={false}
+                        />
+                    </div>
+                </motion.div>
+
+                {/* 3. DIVIDER & 4. STATUS SECTION */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                >
+                    <div className="status-divider">
+                        <div className="line"></div>
+                        <span className="text">ACCESS STATUS</span>
+                        <div className="line"></div>
+                    </div>
+
+                    <div className="status-list">
+                        <div className="status-row">
+                            <span>☕ Coffee Access</span>
+                            <span>{user.balances.coffee} / 8 visits</span>
                         </div>
-                        {user.isBirthday && (
-                            <div className="bg-gradient-to-r from-pink-500 to-purple-500 p-2 rounded-full transform rotate-12">
-                                🎂
-                            </div>
-                        )}
+                        <div className="status-row">
+                            <span>🧺 Laundry Credit</span>
+                            <span>R{user.balances.laundry}</span>
+                        </div>
+                        <div className="status-row">
+                            <span>✂ VIP Salon</span>
+                            <span>{user.balances.salon} / 5 visits</span>
+                        </div>
                     </div>
+                </motion.div>
 
-                    <div className="qr-wrapper">
-                        <QRCodeSVG value={user.id} size={180} level="H" />
-                    </div>
-
-                    <div className="space-y-6 mt-6">
-                        {rewards.map(reward => {
-                            const balance = user.balances[reward.key];
-                            const progress = Math.min((balance / reward.target) * 100, 100);
-                            return (
-                                <div key={reward.key} className="space-y-2">
-                                    <div className="flex justify-between items-end text-xs font-bold uppercase tracking-widest">
-                                        <span className="flex items-center gap-2 opacity-50">
-                                            {reward.icon}
-                                            {reward.name}
-                                        </span>
-                                        <span style={{ color: reward.color }}>
-                                            {reward.isCash ? `R${balance}` : `${balance} / ${reward.target}`}
-                                        </span>
-                                    </div>
-                                    <div className="progress-container">
-                                        <div
-                                            className="progress-fill"
-                                            style={{ width: `${progress}%`, backgroundColor: reward.color, boxShadow: `0 0 10px ${reward.color}40` }}
-                                        ></div>
-                                    </div>
-                                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-tighter">
-                                        {progress >= 100 ? '✨ REWARD READY TO REDEEM' : `Next Reward Progress: ${Math.round(progress)}%`}
-                                    </p>
-                                </div>
-                            );
-                        })}
-                    </div>
+                {/* Vertical Fill Helper */}
+                <div className="mt-8 text-center text-[10px] text-white/10 font-bold tracking-[0.5em] uppercase">
+                    Odancia Private Reserve
                 </div>
 
-                <AnimatePresence>
-                    {user.isBirthday && (
-                        <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            className="w-full bg-gradient-to-r from-[#d4af37] to-[#f4d03f] p-6 rounded-[24px] text-black text-center mb-6"
-                        >
-                            <h2 className="text-xl font-black mb-1">HAPPY BIRTHDAY! 🎂</h2>
-                            <p className="text-sm font-bold opacity-80 uppercase tracking-tighter">Your special VIP reward is waiting for you at the counter.</p>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                <p className="text-center text-[10px] text-gray-700 uppercase tracking-widest font-black mt-4">
-                    TAP QR TO SCALE • SHOW TO STAFF
-                </p>
-            </motion.div>
+            </div>
         </div>
     );
 };
