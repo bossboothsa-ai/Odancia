@@ -11,6 +11,7 @@ const StaffScanner: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [actionFeedback, setActionFeedback] = useState('');
     const [scanError, setScanError] = useState('');
+    const [cameraReady, setCameraReady] = useState(false);
     const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
     const API_BASE = import.meta.env.DEV
@@ -18,6 +19,12 @@ const StaffScanner: React.FC = () => {
         : window.location.origin;
 
     const startScanner = () => {
+        // Clear any existing scanner instance first
+        if (scannerRef.current) {
+            scannerRef.current.clear().catch(() => { });
+            scannerRef.current = null;
+        }
+
         setTimeout(() => {
             const readerDiv = document.getElementById('reader');
             if (readerDiv && !scannerRef.current) {
@@ -26,14 +33,19 @@ const StaffScanner: React.FC = () => {
                     {
                         fps: 20,
                         qrbox: { width: 300, height: 300 },
-                        aspectRatio: 1.0
+                        aspectRatio: 1.0,
+                        // STAFF CAMERA FIX: Force rear camera
+                        videoConstraints: {
+                            facingMode: { ideal: "environment" }
+                        }
                     },
                     false
                 );
                 scannerRef.current = scanner;
+
+                // Track when camera stream starts to avoid "junk screens"
                 scanner.render(
                     (decodedText) => {
-                        // QR ROLE SEPARATION LOGIC
                         if (decodedText.includes('/vip')) {
                             setScanError('This QR is for joining only. Please scan member card.');
                             return;
@@ -41,19 +53,24 @@ const StaffScanner: React.FC = () => {
 
                         if (decodedText.includes('/scan/')) {
                             const memberId = decodedText.split('/scan/')[1];
-                            scanner.clear();
-                            scannerRef.current = null;
-                            handleFetchCustomer(memberId);
+                            scanner.clear().then(() => {
+                                scannerRef.current = null;
+                                handleFetchCustomer(memberId);
+                            }).catch(err => {
+                                console.error("Scanner clear failed", err);
+                                handleFetchCustomer(memberId);
+                            });
                         } else {
-                            // Support legacy IDs if needed, otherwise strict
-                            // For this prompt, let's be strict
                             setScanError('Invalid QR Code. Please scan a valid Member Card.');
                         }
                     },
-                    () => { }
+                    () => {
+                        // Camera started successfully
+                        setCameraReady(true);
+                    }
                 );
             }
-        }, 100);
+        }, 150);
     };
 
     useEffect(() => {
@@ -62,7 +79,7 @@ const StaffScanner: React.FC = () => {
         }
         return () => {
             if (scannerRef.current) {
-                scannerRef.current.clear().catch(e => console.error(e));
+                scannerRef.current.clear().catch(e => console.error("Scanner exit clear error", e));
                 scannerRef.current = null;
             }
         };
@@ -73,6 +90,7 @@ const StaffScanner: React.FC = () => {
         try {
             const response = await axios.get(`${API_BASE}/api/users/${id}`);
             setCustomer(response.data);
+            setCameraReady(false); // Reset for next scan
         } catch (error) {
             setScanError("Member not found.");
         } finally {
@@ -101,23 +119,23 @@ const StaffScanner: React.FC = () => {
                 type
             });
 
+            // PREVENT BLANK SCREEN: Update state directly without refresh
             setCustomer(response.data);
             setActionFeedback(type === 'add' ? 'Visit Added ✅' : 'Reward Redeemed 🎉');
 
+            // AUTO RETURN TO SCAN after 2 seconds
             setTimeout(() => {
                 setActionFeedback('');
                 setCustomer(null);
+                setScanError('');
+                setCameraReady(false);
             }, 2000);
 
         } catch (error) {
             alert("System Error. Try Again.");
-        } finally {
             setLoading(false);
         }
     };
-
-    const currentBalance = customer?.balances[business || ''] || 0;
-    const target = business === 'salon' ? 5 : 8;
 
     return (
         <div className="min-h-screen w-full bg-[#050408] relative overflow-hidden flex flex-col items-center justify-center p-6">
@@ -128,14 +146,14 @@ const StaffScanner: React.FC = () => {
                     <motion.div
                         key="scanner"
                         initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
+                        animate={{ opacity: cameraReady ? 1 : 0 }} // Hide UI until camera is ready
                         exit={{ opacity: 0 }}
                         className="scan-view-container w-full"
                     >
                         <p className="staff-header-label">✦ MEMBER SCAN</p>
                         <div className="scanner-frame-wrapper">
                             <div className="scan-line"></div>
-                            <div id="reader"></div>
+                            <div id="reader" className="overflow-hidden"></div>
                         </div>
                         <p className="scan-bottom-text">Scanning for VIP Member…</p>
                     </motion.div>
@@ -144,6 +162,7 @@ const StaffScanner: React.FC = () => {
                         key="error"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0 }}
                         className="text-center px-6"
                     >
                         <div className="w-24 h-24 bg-red-500/10 border border-red-500/50 rounded-full flex items-center justify-center mx-auto mb-8">
@@ -151,7 +170,10 @@ const StaffScanner: React.FC = () => {
                         </div>
                         <h1 className="text-xl font-bold text-red-500 mb-8 leading-tight">{scanError}</h1>
                         <button
-                            onClick={() => setScanError('')}
+                            onClick={() => {
+                                setScanError('');
+                                setCustomer(null);
+                            }}
                             className="staff-button primary"
                         >
                             Try Again
@@ -162,6 +184,7 @@ const StaffScanner: React.FC = () => {
                         key="feedback"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0 }}
                         className="text-center"
                     >
                         <div className="w-40 h-40 bg-white/5 border border-[#9d50ff] rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_50px_rgba(157,80,255,0.4)]">
@@ -214,6 +237,7 @@ const StaffScanner: React.FC = () => {
             </AnimatePresence>
 
             <style>{`
+                /* Hide technical library UI */
                 #reader__dashboard, #reader__camera_selection, #reader__status_span, #reader button, #reader img, .html5-qrcode-element { display: none !important; }
                 #reader__scan_region, #reader { border: none !important; }
                 #reader video { border-radius: 40px !important; object-fit: cover !important; }
