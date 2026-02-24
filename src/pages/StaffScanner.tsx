@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle, Plus, Gift, Coffee, Shirt, Scissors } from 'lucide-react';
+import { X, CheckCircle, Plus, Gift, Coffee, Shirt, Scissors, Smartphone } from 'lucide-react';
 
 const StaffScanner: React.FC = () => {
     const { business } = useParams<{ business: string }>();
@@ -17,23 +17,26 @@ const StaffScanner: React.FC = () => {
         : window.location.origin;
 
     useEffect(() => {
-        const scanner = new Html5QrcodeScanner(
-            "reader",
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            false
-        );
+        // Automatically start camera on load
+        if (!customer) {
+            const scanner = new Html5QrcodeScanner(
+                "reader",
+                { fps: 20, qrbox: { width: 300, height: 300 } },
+                false
+            );
 
-        scanner.render(onScanSuccess, () => { });
+            scanner.render(onScanSuccess, () => { });
 
-        function onScanSuccess(decodedText: string) {
-            scanner.clear();
-            handleFetchCustomer(decodedText);
+            function onScanSuccess(decodedText: string) {
+                scanner.clear();
+                handleFetchCustomer(decodedText);
+            }
+
+            return () => {
+                scanner.clear().catch(e => console.error("Scanner clear failed", e));
+            };
         }
-
-        return () => {
-            scanner.clear().catch(e => console.error("Scanner clear failed", e));
-        };
-    }, []);
+    }, [customer]);
 
     const handleFetchCustomer = async (id: string) => {
         setLoading(true);
@@ -41,7 +44,7 @@ const StaffScanner: React.FC = () => {
             const response = await axios.get(`${API_BASE}/api/users/${id}`);
             setCustomer(response.data);
         } catch (error) {
-            alert("Invalid QR Code or Member not found.");
+            alert("Member not found.");
             window.location.reload();
         } finally {
             setLoading(false);
@@ -60,7 +63,7 @@ const StaffScanner: React.FC = () => {
                 type
             });
             setCustomer(response.data);
-            setSuccessMsg(type === 'add' ? 'Points Added!' : 'Reward Redeemed!');
+            setSuccessMsg(type === 'add' ? 'POINTS ADDED' : 'REWARD REDEEMED');
             setTimeout(() => setSuccessMsg(''), 2000);
         } catch (error) {
             alert("Update failed.");
@@ -74,97 +77,98 @@ const StaffScanner: React.FC = () => {
     const isEligible = business === 'laundry' ? currentBalance >= 100 : currentBalance >= target;
 
     return (
-        <div className="min-h-screen bg-[#050505] p-6 flex flex-col items-center">
-            <div className="w-full max-w-md">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-white font-bold">Scanning...</h2>
-                    <button onClick={() => navigate(`/staff/dashboard/${business}`)} className="p-2 glass rounded-full">
-                        <X size={20} className="text-white" />
-                    </button>
-                </div>
-
-                {!customer && (
-                    <div className="rounded-3xl overflow-hidden glass border-white/10">
-                        <div id="reader"></div>
+        <div className="min-h-screen bg-black">
+            {/* Camera View - Auto Open */}
+            {!customer && (
+                <div className="scanner-view">
+                    <div id="reader"></div>
+                    <div className="scanner-overlay">
+                        <div className="scanner-guide"></div>
+                        <div className="absolute top-20 text-center w-full">
+                            <h2 className="text-white text-xs uppercase font-black tracking-[0.5em] mb-2">Scanning VIP Member</h2>
+                            <button onClick={() => navigate('/staff')} className="p-4 rounded-full bg-white/10 text-white">
+                                <X size={24} />
+                            </button>
+                        </div>
                     </div>
-                )}
+                </div>
+            )}
 
-                <AnimatePresence>
-                    {customer && (
+            {/* Post-Scan Experience */}
+            <AnimatePresence>
+                {customer && (
+                    <motion.div
+                        initial={{ y: '100%' }}
+                        animate={{ y: 0 }}
+                        exit={{ y: '100%' }}
+                        className="fixed inset-0 bg-black z-50 p-8 flex flex-col justify-center items-center"
+                    >
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="mt-4"
+                            initial={{ scale: 0.9 }}
+                            animate={{ scale: 1 }}
+                            className="w-full max-w-sm"
                         >
-                            <div className="premium-card mb-6">
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="w-16 h-16 bg-[#d4af37] rounded-2xl flex items-center justify-center font-black text-2xl text-black">
-                                        {customer.name[0]}
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-bold text-white">{customer.name}</h3>
-                                        <p className="text-[#a0a0a0] text-sm">VIP Member</p>
-                                    </div>
+                            <div className="flex flex-col items-center mb-12">
+                                <div className="w-24 h-24 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-4xl mb-4">
+                                    {customer.name[0]}
                                 </div>
+                                <h1 className="text-4xl font-black tracking-tighter">{customer.name}</h1>
+                                <p className="text-[10px] items-center flex gap-1 font-extrabold uppercase tracking-[0.4em] text-[#d4af37] mt-2">
+                                    VIP MEMBER {customer.isBirthday && '🎂'}
+                                </p>
+                            </div>
 
-                                <div className="bg-black/40 p-6 rounded-2xl mb-6">
-                                    <p className="text-xs text-[#444] uppercase tracking-widest mb-1">Status</p>
-                                    <div className="flex items-end gap-2">
-                                        <span className="text-4xl font-black text-white">
-                                            {business === 'laundry' ? `R${currentBalance}` : `${currentBalance} / ${target}`}
-                                        </span>
-                                        <span className="text-[#d4af37] mb-2">
-                                            {business === 'coffee' ? <Coffee size={24} /> : business === 'salon' ? <Scissors size={24} /> : <Shirt size={24} />}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 gap-4">
-                                    <button
-                                        disabled={loading}
-                                        onClick={() => handleUpdate('add')}
-                                        className="btn-primary flex items-center justify-center gap-2"
-                                    >
-                                        <Plus size={20} />
-                                        <span>Add {business === 'laundry' ? 'Credit' : 'Visit'}</span>
-                                    </button>
-
-                                    <button
-                                        disabled={loading || !isEligible}
-                                        onClick={() => handleUpdate('redeem')}
-                                        className={`p-6 rounded-2xl font-black uppercase text-sm tracking-widest flex items-center justify-center gap-2 ${isEligible ? 'bg-white text-black' : 'bg-white/5 text-white/20'
-                                            }`}
-                                    >
-                                        <Gift size={20} />
-                                        <span>Redeem Reward</span>
-                                    </button>
+                            <div className="bg-white/5 p-8 rounded-[40px] mb-8 text-center border border-white/5">
+                                <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">Current Progress</p>
+                                <div className="flex items-center justify-center gap-4">
+                                    <span className="text-6xl font-black">
+                                        {business === 'laundry' ? `R${currentBalance}` : `${currentBalance}`}
+                                    </span>
+                                    <span className="opacity-20 text-4xl font-black">/ {business === 'laundry' ? '100' : target}</span>
                                 </div>
                             </div>
 
-                            <button
-                                onClick={() => setCustomer(null)}
-                                className="w-full py-4 glass text-[#a0a0a0] font-bold rounded-2xl"
-                            >
-                                Scan Another Member
-                            </button>
+                            <div className="space-y-4">
+                                <button
+                                    className="btn-main btn-accent"
+                                    onClick={() => handleUpdate('add')}
+                                    disabled={loading}
+                                >
+                                    {business === 'laundry' ? '+ R20 CREDIT' : '+ ADD VISIT'}
+                                </button>
+                                <button
+                                    className={`btn-main ${isEligible ? 'bg-white' : 'bg-white/5 text-white/20'}`}
+                                    onClick={() => handleUpdate('redeem')}
+                                    disabled={loading || !isEligible}
+                                >
+                                    REDEEM REWARD
+                                </button>
+                                <button
+                                    className="btn-main bg-transparent border border-white/10 text-white/40 mt-12"
+                                    onClick={() => setCustomer(null)}
+                                >
+                                    SCAN NEXT
+                                </button>
+                            </div>
                         </motion.div>
-                    )}
-                </AnimatePresence>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-                <AnimatePresence>
-                    {successMsg && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 50 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.5 }}
-                            className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-[#4caf50] text-white px-8 py-4 rounded-full shadow-2xl flex items-center gap-3 z-50"
-                        >
-                            <CheckCircle size={24} />
-                            <span className="font-bold uppercase tracking-widest">{successMsg}</span>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+            {/* Feedback Popups */}
+            <AnimatePresence>
+                {successMsg && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-white text-black px-12 py-6 rounded-[30px] shadow-2xl z-[60] flex items-center gap-4"
+                    >
+                        <CheckCircle className="text-green-500" />
+                        <span className="font-extrabold uppercase tracking-widest text-sm">{successMsg}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

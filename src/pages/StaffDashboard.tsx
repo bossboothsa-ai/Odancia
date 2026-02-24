@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { QrCode, ArrowLeft, Settings, Database } from 'lucide-react';
+import { QrCode, ArrowLeft, Activity } from 'lucide-react';
 
 const StaffDashboard: React.FC = () => {
     const { business } = useParams<{ business: string }>();
@@ -14,52 +14,45 @@ const StaffDashboard: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#050505] p-6 flex flex-col items-center">
-            <div className="w-full max-w-md flex flex-col h-[calc(100vh-48px)]">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-12">
-                    <button onClick={() => navigate('/staff')} className="p-2 glass rounded-full">
-                        <ArrowLeft size={20} className="text-white" />
+        <div className="min-h-screen bg-black flex flex-col items-center">
+            <div className="w-full max-w-sm flex flex-col items-center justify-between h-screen p-8 py-16">
+
+                <div className="w-full flex justify-between items-center">
+                    <button onClick={() => navigate('/staff')} className="text-gray-500">
+                        <ArrowLeft size={24} />
                     </button>
-                    <div className="text-center">
-                        <h2 className="text-xs text-[#444] uppercase tracking-[0.2em] font-bold">Manager Mode</h2>
-                        <h1 className="text-xl font-bold text-white">{businessNames[business || ''] || 'Business'}</h1>
+                    <div className="text-right">
+                        <h2 className="text-[10px] text-[#d4af37] uppercase tracking-[0.3em] font-black">Manager</h2>
+                        <p className="text-lg font-black tracking-tighter">{businessNames[business || '']}</p>
                     </div>
-                    <button className="p-2 glass rounded-full opacity-20">
-                        <Settings size={20} className="text-white" />
-                    </button>
                 </div>
 
-                {/* Big Scan Button Area */}
-                <div className="flex-1 flex flex-col items-center justify-center">
+                <div className="flex-1 flex flex-col items-center justify-center w-full">
                     <motion.button
-                        whileTap={{ scale: 0.95 }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={() => navigate(`/staff/scan/${business}`)}
-                        className="w-64 h-64 bg-white rounded-[60px] flex flex-col items-center justify-center shadow-[0_20px_60px_rgba(255,255,255,0.1)] relative group overflow-hidden"
+                        className="w-full aspect-square bg-white rounded-[60px] flex flex-col items-center justify-center shadow-[0_40px_100px_rgba(255,255,255,0.05)]"
                     >
-                        <div className="absolute inset-0 bg-[#d4af37] opacity-0 group-active:opacity-100 transition-opacity"></div>
-                        <QrCode size={80} className="text-black mb-4 relative z-10" />
-                        <span className="text-black font-black text-xl uppercase tracking-tighter relative z-10">Scan Member</span>
+                        <div className="w-24 h-24 bg-black rounded-full flex items-center justify-center mb-6">
+                            <QrCode size={48} className="text-white" />
+                        </div>
+                        <span className="text-black font-black text-2xl uppercase tracking-tighter">TAP TO SCAN</span>
                     </motion.button>
-
-                    <p className="mt-8 text-sm text-[#a0a0a0] max-w-[200px] text-center">
-                        Instantly detect member and update VIP points
+                    <p className="mt-8 text-[11px] text-gray-600 font-bold uppercase tracking-widest text-center max-w-[200px]">
+                        Camera will open instantly for VIP detection
                     </p>
                 </div>
 
-                {/* Stats Summary */}
-                <div className="grid grid-cols-2 gap-4 mt-auto">
-                    <div className="glass p-5 rounded-3xl">
-                        <Database size={20} className="text-[#d4af37] mb-2" />
-                        <p className="text-2xl font-bold">--</p>
-                        <p className="text-[10px] text-[#444] uppercase tracking-widest">Today's Scans</p>
+                <div className="w-full bg-white/5 p-6 rounded-[32px] flex items-center justify-between border border-white/5">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center">
+                            <Activity size={20} />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-widest text-gray-400">System Live</span>
                     </div>
-                    <div className="glass p-5 rounded-3xl">
-                        <Settings size={20} className="text-[#d4af37] mb-2" />
-                        <p className="text-2xl font-bold">--</p>
-                        <p className="text-[10px] text-[#444] uppercase tracking-widest">Active Rewards</p>
-                    </div>
+                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
                 </div>
+
             </div>
         </div>
     );

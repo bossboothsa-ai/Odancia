@@ -2,14 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import axios from 'axios';
-import { motion } from 'framer-motion';
-import { Coffee, Shirt, Scissors, RefreshCw, Share, Smartphone } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Gift, Coffee, Scissors, Shirt, Sparkles } from 'lucide-react';
 
 const VIPCard: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
 
     const API_BASE = import.meta.env.DEV
         ? `http://${window.location.hostname}:3002`
@@ -23,127 +22,98 @@ const VIPCard: React.FC = () => {
             console.error('Failed to fetch user', error);
         } finally {
             setLoading(false);
-            setRefreshing(false);
         }
     };
 
     useEffect(() => {
         fetchUserData();
-        const interval = setInterval(fetchUserData, 10000);
+        const interval = setInterval(fetchUserData, 5000);
         return () => clearInterval(interval);
     }, [id]);
 
-    const handleRefresh = () => {
-        setRefreshing(true);
-        fetchUserData();
-    };
+    if (loading) return <div className="min-h-screen flex items-center justify-center font-bold tracking-widest text-xs uppercase text-gray-500">Retrieving Status...</div>;
+    if (!user) return <div className="min-h-screen flex items-center justify-center">Member not found.</div>;
 
-    const handleAddToHome = () => {
-        alert("To add to Home Screen:\n1. Tap the Share button\n2. Select 'Add to Home Screen'");
-    };
-
-    if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading your VIP status...</div>;
-    if (!user) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Member not found.</div>;
+    const rewards = [
+        { key: 'coffee', name: 'Coffee Shop', icon: <Coffee />, target: 8, color: '#d4af37' },
+        { key: 'laundry', name: 'Laundry Credit', icon: <Shirt />, target: 100, isCash: true, color: '#60a5fa' },
+        { key: 'salon', name: 'VIP Salon', icon: <Scissors />, target: 5, color: '#c084fc' },
+    ];
 
     return (
-        <div className="min-h-screen bg-[#050505] p-6 pb-24 flex flex-col items-center">
+        <div className="min-h-screen flex flex-col items-center p-6 bg-black overflow-y-auto pb-12">
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-md"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full max-w-sm"
             >
-                <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h2 className="text-[#d4af37] text-xs uppercase tracking-[0.2em] font-semibold">Elite Membership</h2>
-                        <h1 className="text-2xl font-bold text-white uppercase">{user.name}</h1>
-                    </div>
-                    <button onClick={handleRefresh} className={`p-2 rounded-full glass ${refreshing ? 'animate-spin' : ''}`}>
-                        <RefreshCw className="text-[#d4af37] w-5 h-5" />
-                    </button>
-                </div>
-
-                <div className="premium-card mb-8 flex flex-col items-center py-10">
-                    <div className="bg-white p-4 rounded-3xl mb-6 shadow-[0_0_40px_rgba(255,255,255,0.1)]">
-                        <QRCodeSVG value={user.id} size={200} level="H" />
-                    </div>
-                    <p className="text-sm text-[#a0a0a0] mb-2">Member ID</p>
-                    <code className="text-[#d4af37] font-mono text-lg tracking-widest">{user.id.toUpperCase()}</code>
-                </div>
-
-                <div className="w-full space-y-4 mb-10">
-                    <h3 className="text-xs text-[#444] uppercase tracking-widest mb-4">Current Rewards</h3>
-
-                    {/* Coffee Shop */}
-                    <div className="glass p-5 rounded-2xl flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center text-[#d4af37]">
-                                <Coffee size={20} />
-                            </div>
-                            <div>
-                                <p className="font-semibold">Coffee Shop</p>
-                                <p className="text-sm text-[#a0a0a0]">{user.balances.coffee} / 8 visits</p>
-                            </div>
+                {/* Apple Wallet Style Card */}
+                <div className="vip-card-container mb-8">
+                    <div className="flex justify-between items-start mb-6">
+                        <div>
+                            <p className="text-[10px] items-center flex gap-1 font-extrabold uppercase tracking-[0.3em] text-[#d4af37] mb-1">
+                                VIP MEMBER <Sparkles size={10} />
+                            </p>
+                            <h1 className="text-3xl font-extrabold tracking-tight truncate">{user.name}</h1>
                         </div>
-                        <div className="w-24 h-2 bg-[#222] rounded-full overflow-hidden">
-                            <div className="h-full bg-[#d4af37]" style={{ width: `${Math.min((user.balances.coffee / 8) * 100, 100)}%` }}></div>
-                        </div>
+                        {user.isBirthday && (
+                            <div className="bg-gradient-to-r from-pink-500 to-purple-500 p-2 rounded-full transform rotate-12">
+                                🎂
+                            </div>
+                        )}
                     </div>
 
-                    {/* Laundry */}
-                    <div className="glass p-5 rounded-2xl flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center text-blue-400">
-                                <Shirt size={20} />
-                            </div>
-                            <div>
-                                <p className="font-semibold">Laundry Credit</p>
-                                <p className="text-sm text-[#a0a0a0]">R{user.balances.laundry} Available</p>
-                            </div>
-                        </div>
-                        <div className="text-lg font-bold text-blue-400">R{user.balances.laundry}</div>
+                    <div className="qr-wrapper">
+                        <QRCodeSVG value={user.id} size={180} level="H" />
                     </div>
 
-                    {/* Salon */}
-                    <div className="glass p-5 rounded-2xl flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center text-purple-400">
-                                <Scissors size={20} />
-                            </div>
-                            <div>
-                                <p className="font-semibold">VIP Salon</p>
-                                <p className="text-sm text-[#a0a0a0]">{user.balances.salon} / 5 visits</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-1">
-                            {[1, 2, 3, 4, 5].map(i => (
-                                <div key={i} className={`w-3 h-3 rounded-full ${i <= user.balances.salon ? 'bg-purple-400' : 'bg-[#222]'}`}></div>
-                            ))}
-                        </div>
+                    <div className="space-y-6 mt-6">
+                        {rewards.map(reward => {
+                            const balance = user.balances[reward.key];
+                            const progress = Math.min((balance / reward.target) * 100, 100);
+                            return (
+                                <div key={reward.key} className="space-y-2">
+                                    <div className="flex justify-between items-end text-xs font-bold uppercase tracking-widest">
+                                        <span className="flex items-center gap-2 opacity-50">
+                                            {React.cloneElement(reward.icon as React.ReactElement, { size: 14 })}
+                                            {reward.name}
+                                        </span>
+                                        <span style={{ color: reward.color }}>
+                                            {reward.isCash ? `R${balance}` : `${balance} / ${reward.target}`}
+                                        </span>
+                                    </div>
+                                    <div className="progress-container">
+                                        <div
+                                            className="progress-fill"
+                                            style={{ width: `${progress}%`, backgroundColor: reward.color, boxShadow: `0 0 10px ${reward.color}40` }}
+                                        ></div>
+                                    </div>
+                                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-tighter">
+                                        {progress >= 100 ? '✨ REWARD READY TO REDEEM' : `Next Reward Progress: ${Math.round(progress)}%`}
+                                    </p>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                    <button
-                        onClick={handleAddToHome}
-                        className="glass flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-medium"
-                    >
-                        <Smartphone size={18} />
-                        Add to Home
-                    </button>
-                    <button
-                        className="glass flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-medium"
-                        onClick={() => {
-                            if (navigator.share) {
-                                navigator.share({ title: 'My VIP Card', url: window.location.href });
-                            } else {
-                                alert('Copy this URL to save your card: ' + window.location.href);
-                            }
-                        }}
-                    >
-                        <Share size={18} />
-                        Share Card
-                    </button>
-                </div>
+                {/* Birthday / Special Alert */}
+                <AnimatePresence>
+                    {user.isBirthday && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            className="w-full bg-gradient-to-r from-[#d4af37] to-[#f4d03f] p-6 rounded-[24px] text-black text-center mb-6"
+                        >
+                            <h2 className="text-xl font-black mb-1">HAPPY BIRTHDAY! 🎂</h2>
+                            <p className="text-sm font-bold opacity-80 uppercase tracking-tighter">Your special VIP reward is waiting for you at the counter.</p>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <p className="text-center text-[10px] text-gray-700 uppercase tracking-widest font-black mt-4">
+                    TAP QR TO SCALE • SHOW TO STAFF
+                </p>
             </motion.div>
         </div>
     );

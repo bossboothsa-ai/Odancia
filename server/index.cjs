@@ -5,22 +5,17 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
-// Use /tmp on Render for ephemeral data, or local for development
 const DATA_FILE = process.env.RENDER ? '/opt/render/project/src/server/data.json' : path.join(__dirname, 'data.json');
 
 app.use(cors());
 app.use(express.json());
-
-// Serve static files from the Vite build
 app.use(express.static(path.join(__dirname, '../dist')));
 
-// Initial data structure
 const initialData = {
   users: {},
   qrMap: {}
 };
 
-// Load data
 function loadData() {
   if (fs.existsSync(DATA_FILE)) {
     try {
@@ -32,7 +27,6 @@ function loadData() {
   return initialData;
 }
 
-// Save data
 function saveData(data) {
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
@@ -48,12 +42,20 @@ app.get('/api/users/:id', (req, res) => {
   if (!phone || !data.users[phone]) {
     return res.status(404).json({ error: 'User not found' });
   }
-  res.json(data.users[phone]);
+
+  const user = data.users[phone];
+
+  // Quick Birthday Check Logic (Simulated)
+  const today = new Date();
+  const dob = new Date(user.dob);
+  const isBirthday = today.getMonth() === dob.getMonth() && today.getDate() === dob.getDate();
+
+  res.json({ ...user, isBirthday });
 });
 
 app.post('/api/register', (req, res) => {
-  const { name, phone } = req.body;
-  if (!name || !phone) return res.status(400).json({ error: 'Missing fields' });
+  const { name, phone, email, dob } = req.body;
+  if (!name || !phone || !dob) return res.status(400).json({ error: 'Missing fields' });
 
   const data = loadData();
   const userId = 'vip_' + Math.random().toString(36).substr(2, 9);
@@ -61,12 +63,15 @@ app.post('/api/register', (req, res) => {
   data.users[phone] = {
     name,
     phone,
+    email: email || '',
+    dob,
     id: userId,
     balances: {
       coffee: 0,
       laundry: 0,
       salon: 0
-    }
+    },
+    joinedAt: new Date().toISOString()
   };
   data.qrMap[userId] = phone;
 
@@ -92,13 +97,27 @@ app.post('/api/update-points', (req, res) => {
   res.json(user);
 });
 
-// Fallback to index.html for React Router
+// Admin Route for Holiday Campaigns
+app.post('/api/admin/holiday-reward', (req, res) => {
+  const { rewardType, amount } = req.body;
+  const data = loadData();
+
+  Object.keys(data.users).forEach(phone => {
+    if (data.users[phone].balances[rewardType] !== undefined) {
+      data.users[phone].balances[rewardType] += amount;
+    }
+  });
+
+  saveData(data);
+  res.json({ message: `Holiday reward applied to all members!` });
+});
+
 app.use((req, res) => {
   const indexPath = path.join(__dirname, '../dist/index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    res.status(404).send("Frontend build not found. Please run 'npm run build'.");
+    res.status(404).send("Frontend build not found.");
   }
 });
 
