@@ -108,7 +108,7 @@ const VIPCard: React.FC = () => {
                     <div className="qr-glow-inner"></div>
                     <div className="qr-content">
                         <QRCodeSVG
-                            value={user.id}
+                            value={`${window.location.origin}/scan/${user.id}`}
                             size={200}
                             level="H"
                         />

@@ -10,6 +10,7 @@ function App() {
       <div className="app-container">
         <Routes>
           <Route path="/" element={<Navigate to="/join" replace />} />
+          <Route path="/vip" element={<Navigate to="/join" replace />} />
           <Route path="/join" element={<Join />} />
           <Route path="/card/:id" element={<VIPCard />} />
           <Route path="/staff" element={<StaffLogin />} />
