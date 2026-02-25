@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Join from './pages/Join';
 import VIPCard from './pages/VIPCard';
 import StaffScanner from './pages/StaffScanner';
@@ -10,15 +10,17 @@ const App: React.FC = () => {
   const APP_MODE = params.get('mode') ||
     (window.location.pathname.startsWith('/staff') ? 'staff' : 'member');
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     // Only trigger customer auto-login if in member mode
     if (APP_MODE === 'member') {
       const savedId = localStorage.getItem('odancia_member_id');
       if (savedId && (window.location.pathname === '/' || window.location.pathname === '/join')) {
-        window.location.href = `/card/${savedId}`;
+        navigate(`/card/${savedId}`, { replace: true });
       }
     }
-  }, [APP_MODE]);
+  }, [APP_MODE, navigate]);
 
   return (
     <Router>

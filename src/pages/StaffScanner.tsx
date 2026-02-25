@@ -68,14 +68,11 @@ const StaffScanner: React.FC = () => {
                     console.log("QR RAW:", decodedText);
                     const text = decodedText;
 
-                    // STEP 2: Extract member ID safely (Full URL vs Raw ID)
-                    const urlMatch = text.match(/\/card\/([A-Za-z0-9_-]+)/)
-                        || text.match(/\/scan\/([A-Za-z0-9_-]+)/);
+                    // STEP 2: Extract member ID safely (More permissive pattern)
+                    const urlMatch = text.match(/\/card\/([^?#/]+)/)
+                        || text.match(/\/scan\/([^?#/]+)/);
 
-                    // Priority: URL match group 1, then check if raw text looks like an ID (vip_)
-                    const memberId = urlMatch
-                        ? urlMatch[1]
-                        : (text.startsWith('vip_') ? text : null);
+                    const memberId = urlMatch ? urlMatch[1] : (text.startsWith('vip_') ? text : null);
 
                     console.log("EXTRACTED ID:", memberId);
 
