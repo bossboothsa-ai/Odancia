@@ -193,31 +193,31 @@ const StaffScanner: React.FC = () => {
                         className="w-full max-w-sm"
                     >
                         {/* 1. HEADER */}
-                        <div className="text-center mb-16">
+                        <div className="text-center mb-10">
                             <p className="member-label">✦ {business?.toUpperCase()} STATION</p>
-                            <h1 className="customer-name" style={{ fontSize: '42px' }}>Scan Station</h1>
+                            <h1 className="customer-name" style={{ fontSize: '32px' }}>Scan Station</h1>
                         </div>
 
                         {/* 2. PRIMARY ACTIONS */}
-                        <div className="space-y-4 mb-20">
+                        <div className="space-y-3 mb-12">
                             <button
                                 onClick={() => { setStaffView('scan'); setActiveAction('add'); }}
                                 className="staff-button primary"
-                                style={{ height: '64px', fontSize: '18px' }}
+                                style={{ height: '52px', fontSize: '15px' }}
                             >
                                 Add Visit
                             </button>
                             <button
                                 onClick={() => { setStaffView('scan'); setActiveAction('redeem'); }}
                                 className="staff-button"
-                                style={{ height: '64px', fontSize: '18px' }}
+                                style={{ height: '52px', fontSize: '15px' }}
                             >
                                 Redeem Reward
                             </button>
                         </div>
 
                         {/* 3. ACTIVITY OVERVIEW (STAT CARDS) */}
-                        <div className="space-y-4">
+                        <div className="space-y-2">
                             <p className="stat-label text-center mb-2">Today Activity</p>
 
                             <div className="stat-card">
