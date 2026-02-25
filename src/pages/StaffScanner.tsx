@@ -65,9 +65,19 @@ const StaffScanner: React.FC = () => {
 
             scanner.render(
                 (decodedText) => {
-                    console.log("QR Decoded:", decodedText);
-                    const idMatch = decodedText.match(/\/(card|scan)\/([A-Za-z0-9_-]+)/);
-                    const memberId = idMatch ? idMatch[2] : null;
+                    console.log("QR RAW:", decodedText);
+                    const text = decodedText;
+
+                    // STEP 2: Extract member ID safely (Full URL vs Raw ID)
+                    const urlMatch = text.match(/\/card\/([A-Za-z0-9_-]+)/)
+                        || text.match(/\/scan\/([A-Za-z0-9_-]+)/);
+
+                    // Priority: URL match group 1, then check if raw text looks like an ID (vip_)
+                    const memberId = urlMatch
+                        ? urlMatch[1]
+                        : (text.startsWith('vip_') ? text : null);
+
+                    console.log("EXTRACTED ID:", memberId);
 
                     if (memberId) {
                         scanner.clear().then(() => {
@@ -77,10 +87,10 @@ const StaffScanner: React.FC = () => {
                             console.error("Scanner clear failed", err);
                             handleFetchCustomer(memberId);
                         });
-                    } else if (decodedText.includes('/vip') || decodedText.includes('/join')) {
+                    } else if (text.includes('/vip') || text.includes('/join')) {
                         setScanError('This QR is for joining only. Please scan member card.');
                     } else {
-                        setScanError('Invalid QR Code. Please scan a valid Member Card.');
+                        setScanError('Invalid member QR. Please scan a valid Member Card.');
                     }
                 },
                 (_err) => {
