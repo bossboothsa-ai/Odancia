@@ -3,6 +3,8 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Join from './pages/Join';
 import VIPCard from './pages/VIPCard';
 import StaffScanner from './pages/StaffScanner';
+import StaffLogin from './pages/StaffLogin';
+import StaffDashboard from './pages/StaffDashboard';
 
 const App: React.FC = () => {
   const navigate = useNavigate();
@@ -39,8 +41,9 @@ const App: React.FC = () => {
         <Route path="/vip" element={<div className="min-h-screen bg-[#050408]"></div>} />
         <Route path="/join" element={<Join />} />
         <Route path="/card/:id" element={<VIPCard />} />
-        <Route path="/staff" element={<StaffLanding />} />
-        <Route path="/staff/:business" element={<StaffScanner />} />
+        <Route path="/staff" element={<StaffLogin />} />
+        <Route path="/staff/:business" element={<StaffDashboard />} />
+        <Route path="/staff/scan/:business" element={<StaffScanner />} />
       </Routes>
     </div>
   );
