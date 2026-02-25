@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -14,7 +14,7 @@ const StaffScanner: React.FC = () => {
     const [staffView, setStaffView] = useState<'home' | 'scan'>('home');
     const [stats, setStats] = useState({ totalMembers: 0, visitsThisWeek: 0, rewardsRedeemed: 0 });
     const [activeAction, setActiveAction] = useState<'add' | 'redeem' | null>(null);
-    const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+    const scannerRef = useRef<Html5Qrcode | null>(null);
 
     const API_BASE = import.meta.env.DEV
         ? `http://${window.location.hostname}:3002`
@@ -37,42 +37,58 @@ const StaffScanner: React.FC = () => {
         }
     }, [business]);
 
-    const startScanner = (retries = 0) => {
-        if (scannerRef.current) return;
+    const stopExistingScanner = async () => {
+        if (scannerRef.current) {
+            console.log("RELEASING CAMERA...");
+            try {
+                if ('isScanning' in scannerRef.current && (scannerRef.current as any).isScanning) {
+                    await (scannerRef.current as any).stop();
+                } else if ('clear' in scannerRef.current) {
+                    await (scannerRef.current as any).clear();
+                }
+            } catch (err) {
+                console.error("Scanner stop failed", err);
+            }
 
+            // Manual cleanup of video tracks for maximum reliability
+            const reader = document.getElementById('reader');
+            const video = reader?.querySelector('video');
+            if (video && video.srcObject instanceof MediaStream) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            if (reader) reader.innerHTML = '';
+
+            scannerRef.current = null;
+        }
+    };
+
+    const startScanner = async (retries = 0) => {
         const readerDiv = document.getElementById('reader');
         if (!readerDiv) {
             if (retries < 5) {
-                console.log(`Reader div not found, retrying... (${retries + 1})`);
                 setTimeout(() => startScanner(retries + 1), 250);
-            } else {
-                console.error("Reader div never appeared.");
             }
             return;
         }
 
-        console.log("Initializing scanner on #reader...");
+        // Always fully release before starting a new one
+        await stopExistingScanner();
+
+        console.log("INITIALIZING NEW CAMERA STREAM...");
         try {
-            const scanner = new Html5QrcodeScanner(
-                "reader",
+            const scanner = new Html5Qrcode("reader");
+            scannerRef.current = scanner;
+
+            await scanner.start(
+                { facingMode: { ideal: "environment" } },
                 {
                     fps: 20,
                     qrbox: { width: 300, height: 300 },
                     aspectRatio: 1.0,
-                    videoConstraints: {
-                        facingMode: { ideal: "environment" }
-                    }
                 },
-                false
-            );
-            scannerRef.current = scanner;
-
-            scanner.render(
                 (decodedText) => {
-                    console.log("QR RAW:", decodedText);
                     const text = decodedText;
-
-                    // STEP 2: Extract member ID safely (Standardized Formats)
                     let memberId = null;
 
                     if (text.startsWith('odancia:member:')) {
@@ -82,16 +98,8 @@ const StaffScanner: React.FC = () => {
                         memberId = urlMatch ? urlMatch[1] : (text.startsWith('vip_') ? text : null);
                     }
 
-                    console.log("EXTRACTED ID:", memberId);
-
                     if (memberId) {
-                        scanner.clear().then(() => {
-                            scannerRef.current = null;
-                            handleFetchCustomer(memberId);
-                        }).catch(err => {
-                            console.error("Scanner clear failed", err);
-                            handleFetchCustomer(memberId);
-                        });
+                        stopExistingScanner().then(() => handleFetchCustomer(memberId));
                     } else if (text.includes('/vip') || text.includes('/join')) {
                         setScanError('This QR is for joining only. Please scan member card.');
                     } else {
@@ -99,29 +107,19 @@ const StaffScanner: React.FC = () => {
                     }
                 },
                 (_err) => {
-                    // This is called for every frame where no QR is found.
-                    // We use it as a signal that the camera is actually feeding video.
                     if (!cameraReady) setCameraReady(true);
                 }
             );
         } catch (e) {
-            console.error("Scanner initialization failed", e);
+            console.error("Scanner start error", e);
         }
-
-        // Safety fallback to show UI
-        setTimeout(() => setCameraReady(true), 1500);
     };
 
     useEffect(() => {
         if (staffView === 'scan' && !customer && !actionFeedback && !scanError) {
             startScanner();
         }
-        return () => {
-            if (scannerRef.current) {
-                scannerRef.current.clear().catch(e => console.error("Scanner exit clear error", e));
-                scannerRef.current = null;
-            }
-        };
+        return () => { stopExistingScanner(); };
     }, [staffView, customer, actionFeedback, scanError]);
 
     const handleFetchCustomer = async (id: string) => {
@@ -129,10 +127,10 @@ const StaffScanner: React.FC = () => {
         try {
             const response = await axios.get(`${API_BASE}/api/users/${id}`);
             setCustomer(response.data);
-            setCameraReady(false); // Reset for next scan
+            setCameraReady(false);
+            await stopExistingScanner();
         } catch (error) {
             setScanError("Member not found.");
-            // AUTO RESTART SCAN after 2 seconds
             setTimeout(() => {
                 setScanError('');
                 setCustomer(null);
@@ -169,11 +167,12 @@ const StaffScanner: React.FC = () => {
             setActionFeedback(type === 'add' ? 'Visit Added ✅' : 'Reward Redeemed 🎉');
 
             // 2. WAIT 2 SECONDS THEN RETURN TO SCAN (NOT HOME)
-            setTimeout(() => {
+            setTimeout(async () => {
                 setActionFeedback('');
                 setCustomer(null); // Return to scan mode
                 setScanError('');
                 setCameraReady(false);
+                await stopExistingScanner();
                 fetchStats();
             }, 2000);
 
@@ -257,10 +256,29 @@ const StaffScanner: React.FC = () => {
                     >
                         <p className="staff-header-label">✦ SCANNING: {activeAction === 'add' ? 'VISIT' : 'REWARD'}</p>
                         <div className="scanner-frame-wrapper">
+                            {!cameraReady && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/40 backdrop-blur-md rounded-[40px]">
+                                    <p className="text-[10px] font-black tracking-[0.3em] text-white/40 mb-4">Initializing Camera...</p>
+                                    <button
+                                        onClick={() => startScanner()}
+                                        className="text-[10px] text-[#a878ff] font-bold underline tracking-widest decoration-2 underline-offset-4"
+                                    >
+                                        RESTART CAMERA
+                                    </button>
+                                </div>
+                            )}
                             <div className="scan-line"></div>
                             <div id="reader" className="overflow-hidden"></div>
                         </div>
-                        <button onClick={() => setStaffView('home')} className="mt-8 text-white/30 text-xs font-bold uppercase tracking-widest">Cancel Scan</button>
+                        <button
+                            onClick={async () => {
+                                await stopExistingScanner();
+                                setStaffView('home');
+                            }}
+                            className="exit-scan-button"
+                        >
+                            Exit Scan
+                        </button>
                     </motion.div>
                 ) : scanError ? (
                     <motion.div
@@ -331,7 +349,11 @@ const StaffScanner: React.FC = () => {
                             </button>
                             <button
                                 disabled={loading}
-                                onClick={() => { setCustomer(null); setStaffView('home'); }}
+                                onClick={async () => {
+                                    await stopExistingScanner();
+                                    setCustomer(null);
+                                    setStaffView('home');
+                                }}
                                 className="staff-button"
                             >
                                 Cancel
