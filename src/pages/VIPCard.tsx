@@ -71,13 +71,14 @@ const VIPCard: React.FC = () => {
                 onClick={() => {
                     localStorage.removeItem('vip_member_id');
                     localStorage.removeItem('odancia_member_id');
+                    localStorage.removeItem('vip_role');
                     window.location.href = '/join';
                 }}
                 className="staff-button primary"
             >
-                Create New Card
+                Get My VIP Card
             </button>
-        </div>
+        </div >
     );
 
     return (

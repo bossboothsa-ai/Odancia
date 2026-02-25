@@ -31,6 +31,10 @@ const StaffScanner: React.FC = () => {
 
     useEffect(() => {
         fetchStats();
+        if (business) {
+            localStorage.setItem('vip_role', 'staff');
+            localStorage.setItem('vip_staff_business', business);
+        }
     }, [business]);
 
     const startScanner = (retries = 0) => {
@@ -68,11 +72,15 @@ const StaffScanner: React.FC = () => {
                     console.log("QR RAW:", decodedText);
                     const text = decodedText;
 
-                    // STEP 2: Extract member ID safely (More permissive pattern)
-                    const urlMatch = text.match(/\/card\/([^?#/]+)/)
-                        || text.match(/\/scan\/([^?#/]+)/);
+                    // STEP 2: Extract member ID safely (Standardized Formats)
+                    let memberId = null;
 
-                    const memberId = urlMatch ? urlMatch[1] : (text.startsWith('vip_') ? text : null);
+                    if (text.startsWith('odancia:member:')) {
+                        memberId = text.split('odancia:member:')[1];
+                    } else {
+                        const urlMatch = text.match(/\/card\/([^?#/]+)/) || text.match(/\/scan\/([^?#/]+)/);
+                        memberId = urlMatch ? urlMatch[1] : (text.startsWith('vip_') ? text : null);
+                    }
 
                     console.log("EXTRACTED ID:", memberId);
 
@@ -87,7 +95,7 @@ const StaffScanner: React.FC = () => {
                     } else if (text.includes('/vip') || text.includes('/join')) {
                         setScanError('This QR is for joining only. Please scan member card.');
                     } else {
-                        setScanError('Invalid member QR. Please scan a valid Member Card.');
+                        setScanError('Invalid member code.');
                     }
                 },
                 (_err) => {
@@ -155,20 +163,19 @@ const StaffScanner: React.FC = () => {
                 type
             });
 
-            // PREVENT BLANK SCREEN: Update state directly without refresh
+            // 1. UPDATE STATE DIRECTLY (No refresh)
             const updatedCustomer = response.data;
             setCustomer(updatedCustomer);
             setActionFeedback(type === 'add' ? 'Visit Added ✅' : 'Reward Redeemed 🎉');
 
-            // AUTO RETURN TO SCAN after 1.5 seconds (User requested)
+            // 2. WAIT 2 SECONDS THEN RETURN TO SCAN (NOT HOME)
             setTimeout(() => {
                 setActionFeedback('');
-                setCustomer(null);
+                setCustomer(null); // Return to scan mode
                 setScanError('');
                 setCameraReady(false);
-                setStaffView('home');
                 fetchStats();
-            }, 1500);
+            }, 2000);
 
         } catch (error) {
             alert("System Error. Try Again.");

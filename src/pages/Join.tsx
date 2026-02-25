@@ -29,8 +29,9 @@ const Join: React.FC = () => {
             const response = await axios.post(`${API_BASE}/api/register`, formData);
             const user = response.data;
 
-            // SAVE MEMBER ID LOCALLY
+            // SAVE MEMBER ID LOCALLY (Standardized Key)
             localStorage.setItem('vip_member_id', user.id);
+            localStorage.setItem('vip_role', 'customer');
 
             navigate(`/card/${user.id}`);
         } catch (error) {

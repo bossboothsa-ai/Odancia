@@ -5,35 +5,60 @@ import VIPCard from './pages/VIPCard';
 import StaffScanner from './pages/StaffScanner';
 
 const App: React.FC = () => {
-  // MODE DETECTION: Separate Customer vs Staff identities for PWA installs
-  const params = new URLSearchParams(window.location.search);
-  const APP_MODE = params.get('mode') ||
-    (window.location.pathname.startsWith('/staff') ? 'staff' : 'member');
-
   const navigate = useNavigate();
+  const location = window.location.pathname;
 
   useEffect(() => {
-    // Only trigger customer auto-login if in member mode
-    if (APP_MODE === 'member') {
+    // 1. ISOLATION: Don't run customer login logic on staff routes
+    if (location.startsWith('/staff')) return;
+
+    // 2. SMART /VIP HANDLER
+    if (location === '/vip') {
       const savedId = localStorage.getItem('vip_member_id');
-      if (savedId && (window.location.pathname === '/' || window.location.pathname === '/join')) {
+      if (savedId) {
+        navigate(`/card/${savedId}`, { replace: true });
+      } else {
+        navigate('/join', { replace: true });
+      }
+      return;
+    }
+
+    // 3. AUTO-LOGIN ON ROOT/JOIN
+    if (location === '/' || location === '/join') {
+      const savedId = localStorage.getItem('vip_member_id');
+      if (savedId) {
         navigate(`/card/${savedId}`, { replace: true });
       }
     }
-  }, [APP_MODE, navigate]);
+  }, [location, navigate]);
 
   return (
     <div className="app-container">
       <Routes>
         <Route path="/" element={<Navigate to="/join" replace />} />
-        <Route path="/vip" element={<Navigate to="/join" replace />} />
+        <Route path="/vip" element={<div className="min-h-screen bg-[#050408]"></div>} />
         <Route path="/join" element={<Join />} />
         <Route path="/card/:id" element={<VIPCard />} />
-        <Route path="/staff" element={<Navigate to="/staff/coffee" replace />} />
+        <Route path="/staff" element={<StaffLanding />} />
         <Route path="/staff/:business" element={<StaffScanner />} />
       </Routes>
     </div>
   );
+}
+
+// Minimal Staff Landing to remember business
+const StaffLanding = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const lastBiz = localStorage.getItem('vip_staff_business');
+    if (lastBiz) {
+      navigate(`/staff/${lastBiz}`, { replace: true });
+    } else {
+      // Default to coffee if nothing found
+      navigate('/staff/coffee', { replace: true });
+    }
+  }, [navigate]);
+  return <div className="min-h-screen bg-[#050408]"></div>;
 }
 
 export default App;
