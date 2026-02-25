@@ -17,13 +17,8 @@ const Join: React.FC = () => {
         ? `http://${window.location.hostname}:3002`
         : window.location.origin;
 
-    // MEMBER PERSISTENCE: Check if already a member on mount
-    useEffect(() => {
-        const savedMemberId = localStorage.getItem('vip_member_id');
-        if (savedMemberId) {
-            navigate(`/card/${savedMemberId}`, { replace: true });
-        }
-    }, [navigate]);
+    // Redirection handled by App.tsx globally
+    useEffect(() => { }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

@@ -15,7 +15,7 @@ const App: React.FC = () => {
   useEffect(() => {
     // Only trigger customer auto-login if in member mode
     if (APP_MODE === 'member') {
-      const savedId = localStorage.getItem('odancia_member_id');
+      const savedId = localStorage.getItem('vip_member_id');
       if (savedId && (window.location.pathname === '/' || window.location.pathname === '/join')) {
         navigate(`/card/${savedId}`, { replace: true });
       }
