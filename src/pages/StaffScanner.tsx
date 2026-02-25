@@ -187,27 +187,11 @@ const StaffScanner: React.FC = () => {
                     >
                         <div className="text-center mb-12">
                             <p className="member-label">✦ {business?.toUpperCase()} STATION</p>
-                            <h1 className="customer-name" style={{ fontSize: '32px' }}>Activity Hub</h1>
+                            <h1 className="customer-name" style={{ fontSize: '32px' }}>Scan Station</h1>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-4 mb-12">
-                            <div className="bg-white/5 border border-white/5 p-6 rounded-[32px] backdrop-blur-xl">
-                                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black mb-1">Total Members</p>
-                                <p className="text-3xl font-black text-white">{stats.totalMembers}</p>
-                            </div>
-                            <div className="flex gap-4">
-                                <div className="flex-1 bg-white/5 border border-white/5 p-6 rounded-[32px] backdrop-blur-xl">
-                                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black mb-1">Visits Week</p>
-                                    <p className="text-2xl font-black text-[#d1b8ff]">{stats.visitsThisWeek}</p>
-                                </div>
-                                <div className="flex-1 bg-white/5 border border-white/5 p-6 rounded-[32px] backdrop-blur-xl">
-                                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black mb-1">Rewards</p>
-                                    <p className="text-2xl font-black text-[#9d50ff]">{stats.rewardsRedeemed}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
+                        {/* PART 3: REORDERED - BUTTONS FIRST */}
+                        <div className="space-y-4 mb-16">
                             <button
                                 onClick={() => { setStaffView('scan'); setActiveAction('add'); }}
                                 className="staff-button primary"
@@ -222,8 +206,28 @@ const StaffScanner: React.FC = () => {
                             </button>
                         </div>
 
+                        {/* PART 3: REDUCED METRICS WEIGHT */}
+                        <div className="pt-8 border-t border-white/5">
+                            <p className="text-[10px] text-gray-500 uppercase tracking-widest font-black mb-6 text-center">Today Activity</p>
+
+                            <div className="grid grid-cols-1 gap-3">
+                                <div className="flex items-baseline justify-between opacity-70 px-4">
+                                    <p className="text-[13px] font-medium text-gray-400">Total Members</p>
+                                    <p className="text-xl font-black text-white">{stats.totalMembers}</p>
+                                </div>
+                                <div className="flex items-baseline justify-between opacity-70 px-4">
+                                    <p className="text-[13px] font-medium text-gray-400">Visits This Week</p>
+                                    <p className="text-xl font-black text-[#d1b8ff]">{stats.visitsThisWeek}</p>
+                                </div>
+                                <div className="flex items-baseline justify-between opacity-70 px-4">
+                                    <p className="text-[13px] font-medium text-gray-400">Rewards Redeemed</p>
+                                    <p className="text-xl font-black text-[#9d50ff]">{stats.rewardsRedeemed}</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <p className="mt-16 text-center text-[10px] text-white/10 uppercase tracking-widest font-bold">
-                            Odancia Private Reserve
+                            Odancia
                         </p>
                     </motion.div>
                 ) : (staffView === 'scan' && !customer && !actionFeedback && !scanError) ? (
