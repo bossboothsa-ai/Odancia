@@ -41,13 +41,17 @@ const StaffScanner: React.FC = () => {
         if (scannerRef.current) {
             console.log("RELEASING CAMERA...");
             try {
-                if ('isScanning' in scannerRef.current && (scannerRef.current as any).isScanning) {
-                    await (scannerRef.current as any).stop();
-                } else if ('clear' in scannerRef.current) {
-                    await (scannerRef.current as any).clear();
+                // Determine if it's Html5Qrcode (has stop) or Html5QrcodeScanner (has clear)
+                const s = scannerRef.current as any;
+                if (typeof s.stop === 'function') {
+                    // Html5Qrcode - check state if possible or just try-catch
+                    try { await s.stop(); } catch (e) { console.log("Already stopped or error stopping"); }
+                } else if (typeof s.clear === 'function') {
+                    // Html5QrcodeScanner
+                    try { await s.clear(); } catch (e) { console.log("Clear failed"); }
                 }
             } catch (err) {
-                console.error("Scanner stop failed", err);
+                console.error("Scanner release error", err);
             }
 
             // Manual cleanup of video tracks for maximum reliability
@@ -182,7 +186,7 @@ const StaffScanner: React.FC = () => {
         }
     };
 
-    const currentBalance = customer?.balances[business || ''] || 0;
+    const currentBalance = customer?.balances?.[business || ''] || 0;
     const target = business === 'salon' ? 5 : 8;
 
     return (
@@ -250,7 +254,7 @@ const StaffScanner: React.FC = () => {
                     <motion.div
                         key="scanner"
                         initial={{ opacity: 0 }}
-                        animate={{ opacity: cameraReady ? 1 : 0.01 }} // Use 0.01 instead of 0 to avoid "unmounted" feel
+                        animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="scan-view-container w-full flex-1 flex flex-col justify-center"
                     >
@@ -315,7 +319,7 @@ const StaffScanner: React.FC = () => {
                         </div>
                         <h1 className="text-4xl font-black uppercase tracking-tight">{actionFeedback}</h1>
                     </motion.div>
-                ) : (
+                ) : customer ? (
                     <motion.div
                         key="detected"
                         initial={{ opacity: 0, y: 30 }}
@@ -360,7 +364,7 @@ const StaffScanner: React.FC = () => {
                             </button>
                         </div>
                     </motion.div>
-                )}
+                ) : null}
             </AnimatePresence>
 
             <style>{`
